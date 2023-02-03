@@ -17,30 +17,37 @@ int motorPin4 = 2;
 // defines variables
 long duration;
 int distance;
-int PIN = 7;
+int neoPIN = 7; //NEO pixel datapin
 int NUMPIXELS = 4;
 
 //motors
-  ;  //initializing pin 2 as pwm
+
 const int in_A1 = A0 ;
 const int in_A2 = A1 ;
+const int in_A3 = A2 ;
+const int in_A4 = A3 ;
 
+//optional buttons to simulate a car starting
+const int buttonPin = 2;
+int buttonState = 0;
 
-
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(NUMPIXELS, neoPIN, NEO_GRB + NEO_KHZ800);
 #define DELAYVAL 500 
 
 void setup() {
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
   Serial.begin(9600); // Starts the serial communication
-  pinMode(PIN, OUTPUT);
-   pixels.begin();
+  pinMode(neoPIN, OUTPUT); // neo pixel as output
+   pixels.begin();         //begin it
   pixels.setBrightness(50);
   pixels.show(); // Initialize all pixels to 'off'
   pinMode(in_A1,OUTPUT);
+  pinMode(in_A4,OUTPUT);
+
   
- 
+ //button declaration
+ pinMode(buttonPin,INPUT);
  
 }
 
@@ -48,8 +55,9 @@ void setup() {
 
 
 void loop() {
-  analogWrite(in_A1,255);
-    
+  
+   buttonState = digitalRead(buttonPin);
+    if (buttonState == LOW){
     // Clears the trigPin
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
@@ -68,26 +76,36 @@ void loop() {
 
 
  
-if (distance > 10){
-
-     pixels.begin();
-    pixels.setBrightness(50);
-    pixels.show(); // Initialize all pixels to 'off'
-    Serial.print("no hand");
-    }
-  
-if (distance < 10){
-        
+if (distance > 25){
+      //if distance above 10 neopixel off
       for(int i=0; i<NUMPIXELS; i++) {
+          pixels.setPixelColor(i,pixels.Color(137, 207, 240));
+            pixels.show();
+           
+      }
+  
+    }else {
+            //distance less then 10 neopixel on
+      for(int i=0; i<NUMPIXELS; i++) {
+          pixels.setPixelColor(i,pixels.Color(255, 0, 0));
+            pixels.show();
+            analogWrite(in_A2,0);
+              analogWrite(in_A4,0);
+      }
+    }
+
+
+    //if button pressed start car flash of light
+            for(int i=0; i<NUMPIXELS; i++) {
           pixels.setPixelColor(i,pixels.Color(0, 0, 255));
             pixels.begin();
-             Serial.print("hand");
+           
       }
-  }
-
-
-
-    //motors
+      }
+      
+      else {
+      
+        }
 
 }
 

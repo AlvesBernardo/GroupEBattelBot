@@ -12,8 +12,8 @@
 const int trigPin = 12;
 const int echoPin = 13;
 //defining motors 
-const int motorPin = 10;
-const int motorPin2 = 9;
+const int motorPin = 11;
+const int motorPin2 = 10;
 const int motorPin3 = 6;
 const int motorPin4 = 5;
 
@@ -39,8 +39,8 @@ void setup() {
   pixels.begin();         //begin it
   pixels.setBrightness(50);
   pixels.show(); // Initialize all pixels to 'off'
-  pinMode(motorPin, OUTPUT);
-  pinMode (motorPin2, OUTPUT);
+  pinMode(motorPin2, OUTPUT);
+  pinMode (motorPin4, OUTPUT);
 
 
   //button declaration
@@ -70,7 +70,7 @@ void loop() {
   // Prints the distance on the Serial Monitor
   Serial.print("Distance: ");
   Serial.println(distance);
-  digitalWrite(motorPin, HIGH);
+ 
 
 
 
@@ -96,19 +96,19 @@ void detectDistance() {
       pixels.setPixelColor(i, pixels.Color(137, 207, 240));
       pixels.show();
     }
-      analogWrite(motorPin, 255);
       analogWrite(motorPin2, 255);
+      analogWrite(motorPin4, 255);
 
 
   } else {
     //distance less then 10 neopixel on
     for (int i = 0; i < NUMPIXELS; i++) {
-      pixels.setPixelColor(i, pixels.Color(136, 8, 8));
+      pixels.setPixelColor(i, pixels.Color(8, 136,8 ));
       pixels.show();
       
     }
-    analogWrite(motorPin, 0);
-      analogWrite(motorPin2, 0);
+    analogWrite(motorPin2, 0);
+      analogWrite(motorPin4, 0);
   }
 
 

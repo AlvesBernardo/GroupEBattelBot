@@ -1,3 +1,8 @@
+/*************************
+*    Line folower        *
+*************************/
+  
+//==================[ DEFINITION OF PINS ]====================
   int PinLight0=A0;
   int PinLight1=A1;
   int PinLight2=A2;
@@ -7,6 +12,9 @@
   int PinLight6=A6;
   int PinLight7=A7;
 
+  int motorPin1 = 4;
+
+//==================[ SETUP ]==================================
 void setup() {
   Serial.begin(9600);
   pinMode(PinLight0, INPUT);
@@ -17,8 +25,11 @@ void setup() {
   pinMode(PinLight5, INPUT);
   pinMode(PinLight6, INPUT);
   pinMode(PinLight7, INPUT);
+
+  pinMode(motorPin1, OUTPUT);
 }
 
+//=====================[ LOOP BEGINING ] =======================
 void loop() {
   delay(1000);
   Serial.print(analogRead(A0));
@@ -38,4 +49,11 @@ void loop() {
   Serial.print(analogRead(A7));
   Serial.println("-");
 
+  analogWrite(motorPin1, 255);
+
 }
+//=========================[ END OF PROGGRAM]=======================
+
+
+
+//========================[ FUNCTIONS ]===============================

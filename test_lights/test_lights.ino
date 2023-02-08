@@ -3,14 +3,14 @@
 *************************/
   
 //==================[ DEFINITION OF PINS ]====================
-  int PinLight0=A0;
-  int PinLight1=A1;
-  int PinLight2=A2;
-  int PinLight3=A3;
-  int PinLight4=A4;
-  int PinLight5=A5;
-  int PinLight6=A6;
-  int PinLight7=A7;
+  const int PinLight0=A0;
+  const int PinLight1=A1;
+  const int PinLight2=A2;
+  const int PinLight3=A3;
+  const int PinLight4=A4;
+  const int PinLight5=A5;
+  const int PinLight6=A6;
+  const int PinLight7=A7;
 
   int motorPin1 = 4;
 
@@ -26,7 +26,6 @@ void setup() {
   pinMode(PinLight6, INPUT);
   pinMode(PinLight7, INPUT);
 
-  pinMode(motorPin1, OUTPUT);
 }
 
 //=====================[ LOOP BEGINING ] =======================

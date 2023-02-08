@@ -6,16 +6,19 @@
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
+#include <Servo.h>
 
 
 //defining pins
 const int trigPin = 12;
 const int echoPin = 13;
+const int servoPin = 4;
 //defining motors
-const int motorPin = 11;
-const int motorPin2 = 10;
-const int motorPin3 = 6;
-const int motorPin4 = 5;
+const int motorPin = 11; //A1
+const int motorPin2 = 10; //A2
+const int motorPin3 = 6; //B1
+const int motorPin4 = 5; //B2
+
 
 // defines variables
 long duration;
@@ -49,6 +52,11 @@ unsigned long time_now = 0;
 Adafruit_NeoPixel pixels(NUMPIXELS, neoPIN, NEO_GRB + NEO_KHZ800);
 #define DELAYVAL 500
 
+//create servo object
+Servo servo;
+int angle = 10;
+
+
 void setup() {
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
@@ -65,6 +73,9 @@ void setup() {
   pinMode(buttonPin, INPUT);
 
 
+  //attach servo object
+  servo.attach(4);
+  servo.write(angle);
 
 
   //declaring iuput for lineSenor
@@ -103,9 +114,8 @@ void loop() {
   // Calculating the distance
   distance = duration * 0.034 / 2;
   // Prints the distance on the Serial Monitor
-   Serial.print("Distance: ");
+  Serial.print("Distance: ");
   Serial.println(distance);
-
 
 
 
@@ -114,15 +124,31 @@ void loop() {
 
 
   //line sensor if statements
-    if((analogRead(lineSenor2)   >=  700)&&(analogRead(lineSenor3)   >=  700)){forward();}
-    else if((analogRead(lineSenor7)  >=  700)&&(analogRead(lineSenor8)  >= 700 )){turnRight();}
-    else if((analogRead(lineSenor5) >= 700)&&(analogRead(lineSenor6)  >=  700)){turnLeft();}
-    //if((digitalRead(distanc) == 1)&&(digitalRead(lineSensorLeft) == 1)){Stop();}
-  
+  if ((analogRead(lineSenor2)   >=  700) && (analogRead(lineSenor3)   >=  700)) {
+    forward();
+  }
+  else if ((analogRead(lineSenor7)  >=  700) && (analogRead(lineSenor8)  >= 700 )) {
+    turnRight();
+  }
+  else if ((analogRead(lineSenor5) >= 700) && (analogRead(lineSenor6)  >=  700)) {
+    turnLeft();
+  }
+  //if((digitalRead(distanc) == 1)&&(digitalRead(lineSensorLeft) == 1)){Stop();}
+
 
 
   showLineSensorReading();
   //startingPower();
+
+
+  // scan from 0 to 180 degrees
+  for (angle = 10; angle < 180; angle++)
+  {
+    servo.write(angle);
+    delay(15000000000000);
+  }
+  // now scan back from 180 to 0 degrees
+
 
 
 }
@@ -189,16 +215,16 @@ void Stop() {
 }
 
 
-void startingPower(){
-     time_now = millis();
-   
-   
-   
-    while(millis() < time_now + period){
-          analogWrite(motorPin2, 255);
-            analogWrite(motorPin4, 255);
-    }
+void startingPower() {
+  time_now = millis();
+
+
+
+  while (millis() < time_now + period) {
+    analogWrite(motorPin2, 255);
+    analogWrite(motorPin4, 255);
   }
+}
 
 
 

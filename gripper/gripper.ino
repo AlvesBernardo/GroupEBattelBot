@@ -51,7 +51,7 @@ void loop() {
   for (angle = 10; angle < 180; angle++)
   {
     servo.write(angle);
-    delay(15);
+    delay(150000);
   }
   
 }

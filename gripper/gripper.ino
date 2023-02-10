@@ -27,10 +27,15 @@ const int lineSensor8 = A7;
 const int gripper = 8;
 const int neoPix = 7;
 
+// creating array for gripper
+int sensors[]={
+  A0, A1, A2, A3, A4, A5, A6, A7
+};
+
 // create servo object
 
 Servo servo;
-int angle = 10;
+int angle = 180;
 
 void setup() {
   // put your setup code here, to run once:
@@ -45,13 +50,39 @@ servo.write(angle);
 
 void loop() {
   // put your main code here, to run repeatedly:
+  //sensosrs code
+
+  delay(1000);
+  Serial.print(analogRead(A0));
+  Serial.print("-");  
+  Serial.print(analogRead(A1));
+  Serial.print("-");
+  Serial.print(analogRead(A2));
+  Serial.print("-");
+  Serial.print(analogRead(A3));
+  Serial.print("-");
+  Serial.print(analogRead(A4));
+  Serial.print("-");
+  Serial.print(analogRead(A5));
+  Serial.print("-");
+  Serial.print(analogRead(A6));
+  Serial.print("-");
+  Serial.print(analogRead(A7));
+  Serial.println("-");
   
  // scan from 0 to 180 degrees
 
-  for (angle = 10; angle < 180; angle++)
+/*  for (angle = 10; angle < 180; angle++)
   {
     servo.write(angle);
-    delay(150000);
-  }
+    delay(1500);
+  }*/
   
 }
+/* ================ FUNCTIONS  ================*/
+
+void openClaw(){
+  if(analogRead(sensors)>= 700){
+    servo.write(angle);
+  }
+  }

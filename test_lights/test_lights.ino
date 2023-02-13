@@ -12,6 +12,11 @@
   const int PinLight6=A6;
   const int PinLight7=A7;
 
+  int motorBPin2 = 6; //left wheel backward
+  int motorBPin1 = 9; //left wheel forward
+  int motorAPin2 = 10; //right wheel forward
+  int motorAPin1 = 11; //right wheel backwards
+
   int pinArr[]={A7, A6, A5, A4, A3, A2, A1, A0};
 
 //==================[ SETUP ]==================================
@@ -25,6 +30,11 @@ void setup() {
   pinMode(PinLight5, INPUT);
   pinMode(PinLight6, INPUT);
   pinMode(PinLight7, INPUT);
+
+  pinMode(motorBPin2, OUTPUT);
+  pinMode(motorBPin1, OUTPUT);
+  pinMode(motorAPin1, OUTPUT);
+  pinMode(motorAPin2, OUTPUT);
 
 }
 //=====================[ LOOP BEGINING ] =======================
@@ -44,6 +54,10 @@ void loop() {
     Serial.print("-");
   }
   Serial.println("-");
+  int testArr[]={0,0,0,0,0,0,0};
+  if(sensRead==testArr){
+    goForward();
+  }
 
   //it goes from left to right. Pin 7 is the on the far left, pin 0 is on the far right.
   /*
@@ -70,4 +84,8 @@ void loop() {
 
 
 //========================[ FUNCTIONS ]===============================
-void 
+void goForward(){
+  analogWrite(motorBPin1, 200);
+  analogWrite(motorAPin2, 200);
+  delay(10);
+}

@@ -19,13 +19,16 @@
 
 // pin constants
 const int NeoPixelPin = 2;  // used by neopixel library to control the output on the pixels
-const int SonarTrigPin = 3; // sonar/distance sensor requires an input pin to start sending pulses
-const int SonarEchoPin = 7; // sonar uses this pin to output the signal
+const int SonarTrigPin = 3; // distance sensor requires an input pin to start sending pulses
+const int SonarEchoPin = 7; // distance sensor uses this pin to output the signal
+const int RotorPin = 8;     // rotates the distance sensor
 const int GripperPin = 9;   // used by servo library to control the gripper
 const int MotorFLPin = 10; // left motor forward motion
 const int MotorBLPin = 11; // left motor backward motion
 const int MotorFRPin = 6; // right motor forward motion
 const int MotorBRPin = 5; // right motor backward motion
+const int PinR2 = 12;
+const int PinR1 = 13;
 
 // Neopixels
 const int totalPixels = 4;
@@ -46,16 +49,7 @@ const uint32_t orange = pixels.Color(51, 255, 0);
 const uint32_t white = pixels.Color(255, 255, 255);
 
 Servo gripper;
-Servo sensorRotor;
-
-#ifdef DEBUG
-void logValfromFunc(char* funcName, double value) {
-  
-}
-void logValfromFunc(char* funcName, int value) {
-  
-}
-#endif
+Servo rotor;
 
 const int NumLineSensors = 8;
 
@@ -166,15 +160,39 @@ double getDistanceCm() {
   return distance;
 }
 
-const int slow_speed_left = 150;
-const int slow_speed_right = 150;
+const int speed_left = 255;
+const int speed_right = 255;
+
+void releaseGripper() {
+  gripper.write(120);
+  #ifdef DEBUG
+  Serial.print("releaseGripper()\n");
+  #endif
+}
+void holdGripper() {
+  gripper.write(0);
+  #ifdef DEBUG
+  Serial.print("holdGripper()\n");
+  #endif
+}
+
+
+void readR1R2() {
+  auto r1 = pulseIn(PinR1, HIGH);
+  auto r2 = pulseIn(PinR2, HIGH);
+  Serial.print("R1: ");
+  Serial.print(r1);
+  Serial.print("; R2: ");
+  Serial.print(r2);
+  Serial.print("\n");
+}
 
 void forward() {
   #ifdef DEBUG
   Serial.print("forward()\n");
   #endif
-  analogWrite(MotorFLPin, slow_speed_left);
-  analogWrite(MotorFRPin, slow_speed_right);
+  analogWrite(MotorFLPin, speed_left);
+  analogWrite(MotorFRPin, speed_right);
   analogWrite(MotorBLPin, 0);
   analogWrite(MotorBRPin, 0);
 }
@@ -182,26 +200,26 @@ void turnLeft() {
   #ifdef DEBUG
   Serial.print("turnLeft()\n");
   #endif
-  analogWrite(MotorFLPin, slow_speed_left);
+  analogWrite(MotorFLPin, speed_left);
   analogWrite(MotorFRPin, 0);
   analogWrite(MotorBLPin, 0);
-  analogWrite(MotorBRPin, slow_speed_right);
+  analogWrite(MotorBRPin, speed_right);
 } 
 void turnRight() {
   #ifdef DEBUG
   Serial.print("turnRight()\n");
   #endif
   analogWrite(MotorFLPin, 0);
-  analogWrite(MotorFRPin, slow_speed_left);
-  analogWrite(MotorBLPin, slow_speed_right);
+  analogWrite(MotorFRPin, speed_left);
+  analogWrite(MotorBLPin, speed_right);
   analogWrite(MotorBRPin, 0);
 }
 void backward() {
   #ifdef DEBUG
   Serial.print("backward()\n");
   #endif
-  analogWrite(MotorBLPin, slow_speed_left);
-  analogWrite(MotorBRPin, slow_speed_right);
+  analogWrite(MotorBLPin, speed_left);
+  analogWrite(MotorBRPin, speed_right);
   analogWrite(MotorFLPin, 0);
   analogWrite(MotorFRPin, 0);
 }
@@ -215,6 +233,37 @@ void halt() {
   analogWrite(MotorFRPin, 0);
 }
 
+void rotorExtremeLeft() {
+  #ifdef DEBUG
+  Serial.print("rotorExtremeLeft()\n");
+  #endif
+  rotor.write(180);
+}
+void rotorLeft() {
+  #ifdef DEBUG
+  Serial.print("rotorLeft()\n");
+  #endif
+  rotor.write(135);
+}
+void rotorStraight() {
+  #ifdef DEBUG
+  Serial.print("rotorStraight()\n");
+  #endif
+  rotor.write(90);
+}
+void rotorRight() {
+  #ifdef DEBUG
+  Serial.print("rotorRight()\n");
+  #endif
+  rotor.write(45);
+}
+void rotorExtremeRight() {
+  #ifdef DEBUG
+  Serial.print("rotorExtremeRight()\n");
+  #endif
+  rotor.write(0);
+}
+
 void setup() {
   // put your setup code here, to run once:
   #ifdef DEBUG
@@ -223,6 +272,7 @@ void setup() {
   pinMode(SonarTrigPin, OUTPUT);
   pinMode(SonarEchoPin, INPUT);
   pinMode(NeoPixelPin, OUTPUT);
+  pinMode(RotorPin, OUTPUT);
   pinMode(GripperPin, OUTPUT);
   pinMode(MotorFLPin, OUTPUT);
   pinMode(MotorBLPin, OUTPUT);
@@ -235,9 +285,11 @@ void setup() {
   pixels.setPixelColor(pixelRearRight, green);
   pixels.setPixelColor(pixelFrontRight, green);
   pixels.show();
+  gripper.attach(GripperPin);
+  rotor.attach(RotorPin);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  forward();
+ 
 }

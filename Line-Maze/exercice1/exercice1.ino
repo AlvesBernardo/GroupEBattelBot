@@ -1,5 +1,4 @@
 
-
 // including library
 
 #include <Adafruit_NeoPixel.h> //including file
@@ -18,7 +17,8 @@ const int motorPin = 11; //A1
 const int motorPin2 = 10; //A2
 const int motorPin3 = 6; //B1
 const int motorPin4 = 5; //B2
-
+const int motorR1 = 9  ;//R1
+const int motorR2 = 3; //R2
 
 // defines variables
 long duration;
@@ -67,6 +67,8 @@ void setup() {
   pixels.show(); // Initialize all pixels to 'off'
   pinMode(motorPin2, OUTPUT);
   pinMode (motorPin4, OUTPUT);
+  pinMode (motorR1, OUTPUT);
+  pinMode (motorR2, OUTPUT);
 
 
   //button declaration
@@ -87,10 +89,18 @@ void setup() {
   pinMode(lineSenor6, INPUT);
   pinMode(lineSenor7, INPUT);
   pinMode(lineSenor8, INPUT);
+  // scan from 0 to 180 degrees
 
 
+   servo.attach(4);
+   for (angle = 180; angle >= 0; angle -= 1){
+    servo.write(angle);
+    delay(15);
+    }
 
-
+    
+   gripper();
+ 
 
 }
 
@@ -124,16 +134,16 @@ void loop() {
 
 
   //line sensor if statements
-  if ((analogRead(lineSenor2)   >=  700) && (analogRead(lineSenor3)   >=  700)) {
+  if ((analogRead(lineSenor2)   >=  800) && (analogRead(lineSenor3)   >=  800)) {
     forward();
   }
-  else if ((analogRead(lineSenor7)  >=  700) && (analogRead(lineSenor8)  >= 700 )) {
+  else if ((analogRead(lineSenor7)  >=  800) && (analogRead(lineSenor8)  >= 800 )) {
     turnRight();
   }
-  else if ((analogRead(lineSenor5) >= 700) && (analogRead(lineSenor6)  >=  700)) {
+  else if ((analogRead(lineSenor5) >= 800) && (analogRead(lineSenor6)  >=  800)) {
     turnLeft();
   }
-  //if((digitalRead(distanc) == 1)&&(digitalRead(lineSensorLeft) == 1)){Stop();}
+//  if((digitalRead(distanc) == 1)&&(digitalRead(lineSensorLeft) == 1)){Stop();}
 
 
 
@@ -141,14 +151,16 @@ void loop() {
   //startingPower();
 
 
-  // scan from 0 to 180 degrees
-  for (angle = 10; angle < 180; angle++)
-  {
-    servo.write(angle);
-    delay(15000000000000);
-  }
-  // now scan back from 180 to 0 degrees
 
+
+  // now scan back from 180 to 0 degrees
+ if(distance <25){
+   for (angle = 180; angle >= 0; angle -= 1){
+    servo.write(angle);
+    delay(15);
+    }
+ }
+  
 
   
 }
@@ -157,6 +169,18 @@ void loop() {
 
 /*    ======[funtions] ========*/
 
+
+void gripper(){
+
+
+ if(distance >25){
+  for (angle = 10; angle <= 180; angle += 1){
+    servo.write(angle);
+    delay(15);
+    }
+ }
+  
+  }
 
 
 void detectDistance() {
@@ -172,11 +196,16 @@ void detectDistance() {
 
   } else {
     //distance less then 10 neopixel on
-    for (int i = 0; i < NUMPIXELS; i++) {
-      pixels.setPixelColor(i, pixels.Color(8, 136, 8 ));
-      pixels.show();
+    
+      pixels.setPixelColor(3, pixels.Color(140, 255, 0 ));
+        pixels.setPixelColor(0, pixels.Color(140, 255, 0 ));
+        pixels.setPixelColor(1, pixels.Color(137, 207, 240));
+        pixels.setPixelColor(2, pixels.Color(137, 207, 240));
+        analogWrite(motorPin2, 0); //Right Motor forword Pin
+        analogWrite(motorPin4, 0); //Left Motor forward Pin
+        pixels.show();
 
-    }
+    
 
   }
 
@@ -186,23 +215,23 @@ void detectDistance() {
 
 
 void forward() {
-  analogWrite(motorPin2, 150);
+  analogWrite(motorPin2, 255);
   analogWrite(motorPin, 0);
   analogWrite(motorPin3, 0);
-  analogWrite(motorPin4, 150);
+  analogWrite(motorPin4, 255);
 }
 
 void turnRight() {
   analogWrite(motorPin2, 0);  //Right Motor forword Pin
-  analogWrite(motorPin, 150); //Right Motor backword Pin
+  analogWrite(motorPin, 200); //Right Motor backword Pin
   analogWrite(motorPin3, 0);  //Left Motor backword Pin
-  analogWrite(motorPin4, 150); //Left Motor forword Pin
+  analogWrite(motorPin4, 200); //Left Motor forword Pin
 }
 
 void turnLeft() {
-  analogWrite(motorPin2, 150); //Right Motor forword Pin
+  analogWrite(motorPin2, 200); //Right Motor forword Pin
   analogWrite(motorPin, 0);  //Right Motor backword Pin
-  analogWrite(motorPin3, 150); //Left Motor backword Pin
+  analogWrite(motorPin3, 200); //Left Motor backword Pin
   analogWrite(motorPin4, 0);  //Left Motor forword Pin
 }
 
@@ -250,11 +279,9 @@ void showLineSensorReading() {
 
 }
 /*
-
   void setup() {
     pinMode(ledRed, OUTPUT);
   }
-
   void loop(){
     digitalWrite(ledRed, LOW);
     delay(500);//wait 500mil

@@ -45,13 +45,14 @@ const uint32_t magenta = pixels.Color(0, 255, 255);
 const uint32_t orange = pixels.Color(51, 255, 0);
 const uint32_t white = pixels.Color(255, 255, 255);
 
-Servo servo;
+Servo gripper;
+Servo sensorRotor;
 
 #ifdef DEBUG
-void logValfromFunc(char[] funcName, double value) {
+void logValfromFunc(char* funcName, double value) {
   
 }
-void logValfromFunc(char[] funcName, int value) {
+void logValfromFunc(char* funcName, int value) {
   
 }
 #endif
@@ -64,7 +65,7 @@ private:
   int m_darkThreshold = 650;
   // TODO: remove m_strictness from code before submitting the project
   double m_strictness = 1.0; // strictness determines how great a % score should be in order for the function to return true
-  // values below 1 make the program less reliant on every sensor working perfectly, so the robot might survive even if damaged
+  // values below 1 make the program less reliant on every sensor working perfectly, so the robot might work even if damaged
   #ifdef DEBUG
   // even in debug mode, we might want to switch off the output log to make sure the other logs are clearly visible
   bool m_logOutput = true;
@@ -74,6 +75,7 @@ public:
     int tempArray[] = {left4, left3, left2, left1, right1, right2, right3, right4};
     for (int i = 0; i >= NumLineSensors; i++) {
       m_sensors[i] = tempArray[i];
+      pinMode(tempArray[i], INPUT);
     }
   }
   #ifdef DEBUG
@@ -90,8 +92,9 @@ public:
   // not implemented
   int getFirstDarkRegion() {
     int result = -1;
+    int reading;
     for (int pin : m_sensors) {
-      auto reading = analogRead(pin);
+      reading = analogRead(pin);
       if (reading > m_darkThreshold) {
         result = pin;
         break;
@@ -102,7 +105,7 @@ public:
       Serial.print("LineSensor.getFirstDarkRegion(): pin ");
       Serial.print(result);
       Serial.print(" has value of ");
-      Serial.print(pin!=-1? reading : 0);
+      Serial.print(result!=-1? reading : 0);
       Serial.print(".\n");
     }
     #endif
@@ -146,11 +149,6 @@ public:
     #endif
     return (count / NumLineSensors) >= m_strictness;
   }
-  bool isDarkFront() {
-    double count = 0;
-    int pin;
-    
-  }
 };
 auto lineSensors = new LineSensor(A6, A7, A1, A0, A2, A3, A4, A5);
 
@@ -168,15 +166,78 @@ double getDistanceCm() {
   return distance;
 }
 
+const int slow_speed_left = 150;
+const int slow_speed_right = 150;
+
+void forward() {
+  #ifdef DEBUG
+  Serial.print("forward()\n");
+  #endif
+  analogWrite(MotorFLPin, slow_speed_left);
+  analogWrite(MotorFRPin, slow_speed_right);
+  analogWrite(MotorBLPin, 0);
+  analogWrite(MotorBRPin, 0);
+}
+void turnLeft() {
+  #ifdef DEBUG
+  Serial.print("turnLeft()\n");
+  #endif
+  analogWrite(MotorFLPin, slow_speed_left);
+  analogWrite(MotorFRPin, 0);
+  analogWrite(MotorBLPin, 0);
+  analogWrite(MotorBRPin, slow_speed_right);
+} 
+void turnRight() {
+  #ifdef DEBUG
+  Serial.print("turnRight()\n");
+  #endif
+  analogWrite(MotorFLPin, 0);
+  analogWrite(MotorFRPin, slow_speed_left);
+  analogWrite(MotorBLPin, slow_speed_right);
+  analogWrite(MotorBRPin, 0);
+}
+void backward() {
+  #ifdef DEBUG
+  Serial.print("backward()\n");
+  #endif
+  analogWrite(MotorBLPin, slow_speed_left);
+  analogWrite(MotorBRPin, slow_speed_right);
+  analogWrite(MotorFLPin, 0);
+  analogWrite(MotorFRPin, 0);
+}
+void halt() {
+  #ifdef DEBUG
+  Serial.print("halt()\n");
+  #endif
+  analogWrite(MotorBLPin, 0);
+  analogWrite(MotorBRPin, 0);
+  analogWrite(MotorFLPin, 0);
+  analogWrite(MotorFRPin, 0);
+}
+
 void setup() {
   // put your setup code here, to run once:
   #ifdef DEBUG
   Serial.begin(9600);
   #endif
+  pinMode(SonarTrigPin, OUTPUT);
+  pinMode(SonarEchoPin, INPUT);
+  pinMode(NeoPixelPin, OUTPUT);
+  pinMode(GripperPin, OUTPUT);
+  pinMode(MotorFLPin, OUTPUT);
+  pinMode(MotorBLPin, OUTPUT);
+  pinMode(MotorFRPin, OUTPUT);
+  pinMode(MotorBRPin, OUTPUT);
   pixels.begin();
+  pixels.clear();
+  pixels.setPixelColor(pixelRearLeft, red);
+  pixels.setPixelColor(pixelFrontLeft, red);
+  pixels.setPixelColor(pixelRearRight, green);
+  pixels.setPixelColor(pixelFrontRight, green);
+  pixels.show();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
+  forward();
 }

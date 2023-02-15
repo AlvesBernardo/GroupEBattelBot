@@ -19,7 +19,7 @@
 
 // pin constants
 const int NeoPixelPin = 2;  // used by neopixel library to control the output on the pixels
-const int SonarTrigPin = 3; // distance sensor requires an input pin to start sending pulses
+const int SonarTrigPin = 4; // distance sensor requires an input pin to start sending pulses
 const int SonarEchoPin = 7; // distance sensor uses this pin to output the signal
 const int RotorPin = 8;     // rotates the distance sensor
 const int GripperPin = 9;   // used by servo library to control the gripper
@@ -144,14 +144,19 @@ public:
     return (count / NumLineSensors) >= m_strictness;
   }
 };
+
+
 auto lineSensors = new LineSensor(A6, A7, A1, A0, A2, A3, A4, A5);
 
 double getDistanceCm() {
+  digitalWrite(SonarTrigPin, LOW); // clean any pulses
+  delayMicroseconds(5);
   digitalWrite(SonarTrigPin, HIGH);
   delayMicroseconds(10);
-  digitalWrite(SonarTrigPin, LOW); // cleaning up the pulses
+  digitalWrite(SonarTrigPin, LOW);
   double duration = pulseIn(SonarEchoPin, HIGH);
-  double distance = (duration / 2) / 29.1;
+  double distance = (duration/2) / 29.1;
+  digitalWrite(SonarTrigPin, LOW); // cleaning up the pulses
   #ifdef DEBUG
   Serial.print("Distance to object: ");
   Serial.print(distance);
@@ -200,19 +205,19 @@ void turnLeft() {
   #ifdef DEBUG
   Serial.print("turnLeft()\n");
   #endif
-  analogWrite(MotorFLPin, speed_left);
-  analogWrite(MotorFRPin, 0);
-  analogWrite(MotorBLPin, 0);
-  analogWrite(MotorBRPin, speed_right);
+  analogWrite(MotorFLPin, 0);
+  analogWrite(MotorFRPin, speed_left);
+  analogWrite(MotorBLPin, speed_right);
+  analogWrite(MotorBRPin, 0);
 } 
 void turnRight() {
   #ifdef DEBUG
   Serial.print("turnRight()\n");
   #endif
-  analogWrite(MotorFLPin, 0);
-  analogWrite(MotorFRPin, speed_left);
-  analogWrite(MotorBLPin, speed_right);
-  analogWrite(MotorBRPin, 0);
+  analogWrite(MotorFLPin, speed_left);
+  analogWrite(MotorFRPin, 0);
+  analogWrite(MotorBLPin, 0);
+  analogWrite(MotorBRPin, speed_right);
 }
 void backward() {
   #ifdef DEBUG
@@ -245,11 +250,23 @@ void rotorLeft() {
   #endif
   rotor.write(135);
 }
+void rotorSlightLeft() {
+  #ifdef DEBUG
+  Serial.print("rotorSlightLeft()\n");
+  #endif
+  rotor.write(105);
+}
 void rotorStraight() {
   #ifdef DEBUG
   Serial.print("rotorStraight()\n");
   #endif
   rotor.write(90);
+}
+void rotorSlightRight() {
+  #ifdef DEBUG
+  Serial.print("rotorSlightRight()\n");
+  #endif
+  rotor.write(75);
 }
 void rotorRight() {
   #ifdef DEBUG
@@ -262,6 +279,33 @@ void rotorExtremeRight() {
   Serial.print("rotorExtremeRight()\n");
   #endif
   rotor.write(0);
+}
+void frontLights(uint32_t color) {
+  pixels.setPixelColor(pixelFrontLeft, color);
+  pixels.setPixelColor(pixelFrontRight, color);
+  pixels.show();
+}
+void rearLights(uint32_t color) {
+  pixels.setPixelColor(pixelRearLeft, color);
+  pixels.setPixelColor(pixelRearRight, color);
+  pixels.show();
+}
+void allLights(uint32_t color) {
+  pixels.setPixelColor(pixelFrontLeft, color);
+  pixels.setPixelColor(pixelFrontRight, color);
+  pixels.setPixelColor(pixelRearLeft, color);
+  pixels.setPixelColor(pixelRearRight, color);
+  pixels.show();
+}
+void leftLights(uint32_t color) {
+  pixels.setPixelColor(pixelFrontLeft, color);
+  pixels.setPixelColor(pixelRearLeft, color);
+  pixels.show();
+}
+void rightLights(uint32_t color) {
+  pixels.setPixelColor(pixelRearRight, color);
+  pixels.setPixelColor(pixelFrontRight, color);
+  pixels.show();
 }
 
 void setup() {
@@ -280,16 +324,21 @@ void setup() {
   pinMode(MotorBRPin, OUTPUT);
   pixels.begin();
   pixels.clear();
-  pixels.setPixelColor(pixelRearLeft, red);
-  pixels.setPixelColor(pixelFrontLeft, red);
-  pixels.setPixelColor(pixelRearRight, green);
-  pixels.setPixelColor(pixelFrontRight, green);
-  pixels.show();
+  allLights(cyan);
   gripper.attach(GripperPin);
   rotor.attach(RotorPin);
+  releaseGripper();
+  rotorStraight();
+  delay(500);
+  rotorExtremeLeft();
+  delay(500);
+  rotorExtremeRight();
 }
-
+bool external_activation = true;
 void loop() {
-  // put your main code here, to run repeatedly:
- 
+  if (!external_activation) {
+    return;
+  }
+  readR1R2();
+  
 }

@@ -19,17 +19,12 @@
 
   int pinArr[]={A7, A6, A5, A4, A3, A2, A1, A0};
 
+  int position = 0;
+
 //==================[ SETUP ]==================================
 void setup() {
   Serial.begin(9600);
-  pinMode(PinLight0, INPUT);
-  pinMode(PinLight1, INPUT);
-  pinMode(PinLight2, INPUT);
-  pinMode(PinLight3, INPUT);
-  pinMode(PinLight4, INPUT);
-  pinMode(PinLight5, INPUT);
-  pinMode(PinLight6, INPUT);
-  pinMode(PinLight7, INPUT);
+  pinMode(pinArr, INPUT);
 
   pinMode(motorBPin2, OUTPUT);
   pinMode(motorBPin1, OUTPUT);
@@ -40,7 +35,6 @@ void setup() {
 //=====================[ LOOP BEGINING ] =======================
 int sensRead[7];
 void loop() {
-  delay(1000);
   for(int i = 0; i<7; i++){
     if(analogRead(pinArr[i])>925){
       sensRead[i]=1;
@@ -54,30 +48,13 @@ void loop() {
     Serial.print("-");
   }
   Serial.println("-");
-  int testArr[]={0,0,0,0,0,0,0};
-  if(sensRead==testArr){
+  if(sensRead[1]==0){
     goForward();
   }
-
-  //it goes from left to right. Pin 7 is the on the far left, pin 0 is on the far right.
-  /*
-  Serial.print(analogRead(PinLight7));
-  Serial.print("-");  
-  Serial.print(analogRead(PinLight6));
-  Serial.print("-");
-  Serial.print(analogRead(PinLight5));
-  Serial.print("-");
-  Serial.print(analogRead(PinLight4));
-  Serial.print("-");
-  Serial.print(analogRead(PinLight3));
-  Serial.print("-");
-  Serial.print(analogRead(PinLight2));
-  Serial.print("-");
-  Serial.print(analogRead(PinLight1));
-  Serial.print("-");
-  Serial.print(analogRead(PinLight0));
-  Serial.println("-");
-*/
+  else{
+    stop();
+  }
+  Serial.println(conversion(sensRead));
 }
 //=========================[ END OF PROGGRAM]=======================
 
@@ -85,7 +62,32 @@ void loop() {
 
 //========================[ FUNCTIONS ]===============================
 void goForward(){
-  analogWrite(motorBPin1, 200);
-  analogWrite(motorAPin2, 200);
-  delay(10);
+  analogWrite(motorBPin1, 150);
+  analogWrite(motorAPin2, 150);
+}
+void stop(){
+  analogWrite(motorBPin1, 0);
+  analogWrite(motorAPin2, 0);
+}
+int conversion(int reading[]){
+  int position = 0;
+  int relativePos = -4;
+  if((reading[0]==1) && (reading[1]==0) && (reading[2]==0) && (reading[3]==0) && (reading[4]==0) && (reading[5]==0) && (reading[6]==0) && (reading[7]==0)){
+      position = -6;
+      return position;
+    }
+  if((reading[0]==0) && (reading[1]==0) && (reading[2]==0) && (reading[3]==0) && (reading[4]==0) && (reading[5]==0) && (reading[6]==0) && (reading[7]==1)){
+    position = 6;
+    return position;
+  }
+  for(int i = 0; i<7; i++){
+    if(reading[i]==1){
+      position=position+relativePos;
+    }
+    relativePos++;
+    if(relativePos==0){
+      relativePos++;
+    }
+  }
+  return position;
 }

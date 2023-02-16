@@ -43,6 +43,9 @@ const int lineSenor6 = A5;
 const int lineSenor7 = A6;
 const int lineSenor8 = A7;
 
+//putting in into an array cause it's cool 
+int pinArray[] = {A0,A1,A2,A3,A4,A5,A6,A7};
+
 
 
 //varaible for full power at the begininng
@@ -134,7 +137,7 @@ void loop() {
 
 
   //line sensor if statements
-  if ((analogRead(lineSenor2)   >=  800) && (analogRead(lineSenor3)   >=  800)) {
+  /*if ((analogRead(lineSenor2)   >=  800) && (analogRead(lineSenor3)   >=  800)) {
     forward();
   }
   else if ((analogRead(lineSenor7)  >=  800) && (analogRead(lineSenor8)  >= 800 )) {
@@ -144,10 +147,12 @@ void loop() {
     turnLeft();
   }
 //  if((digitalRead(distanc) == 1)&&(digitalRead(lineSensorLeft) == 1)){Stop();}
+*/
+  //calling the sensore function
+  loopForSensor();
 
 
 
-  showLineSensorReading();
   //startingPower();
 
 
@@ -214,6 +219,67 @@ void detectDistance() {
 }
 
 
+//loop to calibrate our sensors 
+int amounntOfSensore[7];
+void loopForSensor(){
+  
+  for(int i = 0; i<7; i++){
+    if(analogRead(pinArray[i])>880){
+      amounntOfSensore[i]=1;
+    }
+    else{
+      amounntOfSensore[i]=0;
+    }
+  }
+  for(int i=0; i<7; i++){
+    Serial.print(amounntOfSensore[i]);
+    Serial.print("-");
+  }
+  
+  Serial.println("");
+  //different possitons 
+   int array1[]={0,0,0,0,0,0,0,0};
+   int array2[]={1,1,0,0,0,0,0,0};
+   int array3[]={0,1,1,0,0,0,0,0};
+   int array4[]={0,0,1,1,0,0,0,0};
+   int array5[]={0,0,0,1,1,0,0,0};
+   int array6[]={0,0,0,0,1,1,0,0};
+   int array7[]={0,0,0,0,0,1,1,0};
+   int array8[]={0,0,0,0,0,0,1,1};
+   int array9[]={1,1,1,1,1,1,1,1};
+
+  //giving the array values
+
+  
+ 
+  if(amounntOfSensore[1] && amounntOfSensore[2]){
+      forward();
+    }else if (amounntOfSensore[1] && amounntOfSensore[0]){
+      turnRight();
+      }
+      else if (amounntOfSensore[7] && amounntOfSensore[0]){
+      turnRight();
+      }
+       else if (amounntOfSensore[7] && amounntOfSensore[6]){
+      turnRight();
+      }
+       else if (amounntOfSensore[1] && amounntOfSensore[3]){
+      turnLeft();
+      }
+       else if (amounntOfSensore[4] && amounntOfSensore[3]){
+      turnLeft();
+      }
+       else if (amounntOfSensore[4] && amounntOfSensore[5]){
+      turnLeft();
+      }
+
+
+
+
+  
+  
+  }
+
 void forward() {
   analogWrite(motorPin2, 255);
   analogWrite(motorPin, 0);
@@ -235,11 +301,11 @@ void turnLeft() {
   analogWrite(motorPin4, 0);  //Left Motor forword Pin
 }
 
-void Stop() {
+void stopCar() {
   analogWrite(motorPin2, 0); //Right Motor forword Pin
-  analogWrite(motorPin, 0); //Right Motor backword Pin
+  analogWrite(motorPin, 255); //Right Motor backword Pin
   analogWrite(motorPin3, 0); //Left Motor backword Pin
-  analogWrite(motorPin4, 0); //Left Motor forward Pin
+  analogWrite(motorPin4, 255); //Left Motor forward Pin
 
 }
 
@@ -278,6 +344,8 @@ void showLineSensorReading() {
   delay(50);
 
 }
+
+
 /*
   void setup() {
     pinMode(ledRed, OUTPUT);

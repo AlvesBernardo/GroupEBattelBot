@@ -60,6 +60,11 @@ Servo servo;
 int angle = 10;
 
 
+//bluetooth adapter
+int state = 0;
+
+
+
 void setup() {
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
@@ -103,8 +108,14 @@ void setup() {
 
     
    gripper();
+
+
+   //bluethooth
+
+  //Serial.begin(38400); // Default communication rate of the Bluetooth module
  
 
+  startingPower();
 }
 
 
@@ -153,7 +164,7 @@ void loop() {
 
 
 
-  //startingPower();
+  
 
 
 
@@ -165,7 +176,11 @@ void loop() {
     delay(15);
     }
  }
-  
+
+
+
+   //bluetooth
+   //bluethootAdapter();
 
   
 }
@@ -252,26 +267,31 @@ void loopForSensor(){
 
   
  
-  if(amounntOfSensore[1] && amounntOfSensore[2]){
+  if(amounntOfSensore == array1){
       forward();
-    }else if (amounntOfSensore[1] && amounntOfSensore[0]){
+    }else if(amounntOfSensore == array5){
+      forward();
+      }
+    else if (amounntOfSensore== array2){
       turnRight();
       }
-      else if (amounntOfSensore[7] && amounntOfSensore[0]){
+      else if (amounntOfSensore== array3){
       turnRight();
       }
-       else if (amounntOfSensore[7] && amounntOfSensore[6]){
+       else if (amounntOfSensore == array4){
       turnRight();
       }
-       else if (amounntOfSensore[1] && amounntOfSensore[3]){
+       else if (amounntOfSensore == array6){
       turnLeft();
       }
-       else if (amounntOfSensore[4] && amounntOfSensore[3]){
+       else if (amounntOfSensore == array7){
       turnLeft();
       }
-       else if (amounntOfSensore[4] && amounntOfSensore[5]){
+       else if (amounntOfSensore == array8){
       turnLeft();
-      }
+      } else if (amounntOfSensore == array9){
+        stopCar();
+        }
 
 
 
@@ -281,31 +301,31 @@ void loopForSensor(){
   }
 
 void forward() {
-  analogWrite(motorPin2, 255);
+  analogWrite(motorPin2, 180);
   analogWrite(motorPin, 0);
   analogWrite(motorPin3, 0);
-  analogWrite(motorPin4, 255);
+  analogWrite(motorPin4, 180);
 }
 
 void turnRight() {
   analogWrite(motorPin2, 0);  //Right Motor forword Pin
-  analogWrite(motorPin, 200); //Right Motor backword Pin
+  analogWrite(motorPin, 150); //Right Motor backword Pin
   analogWrite(motorPin3, 0);  //Left Motor backword Pin
-  analogWrite(motorPin4, 200); //Left Motor forword Pin
+  analogWrite(motorPin4, 150); //Left Motor forword Pin
 }
 
 void turnLeft() {
-  analogWrite(motorPin2, 200); //Right Motor forword Pin
+  analogWrite(motorPin2, 150); //Right Motor forword Pin
   analogWrite(motorPin, 0);  //Right Motor backword Pin
-  analogWrite(motorPin3, 200); //Left Motor backword Pin
+  analogWrite(motorPin3, 150); //Left Motor backword Pin
   analogWrite(motorPin4, 0);  //Left Motor forword Pin
 }
 
 void stopCar() {
   analogWrite(motorPin2, 0); //Right Motor forword Pin
-  analogWrite(motorPin, 255); //Right Motor backword Pin
+  analogWrite(motorPin, 0); //Right Motor backword Pin
   analogWrite(motorPin3, 0); //Left Motor backword Pin
-  analogWrite(motorPin4, 255); //Left Motor forward Pin
+  analogWrite(motorPin4, 150); //Left Motor forward Pin
 
 }
 
@@ -346,13 +366,26 @@ void showLineSensorReading() {
 }
 
 
+
+
+/*-------*/
+/*bluetooth*/
+/*-------*/
+
+
+
 /*
-  void setup() {
-    pinMode(ledRed, OUTPUT);
+void bluethootAdapter(){
+  
+
+
+ if (state == '0') {
+  state = 0;
+ }
+ else if (state == '1') {
+  
+  state = 0;
+ } 
+  
   }
-  void loop(){
-    digitalWrite(ledRed, LOW);
-    delay(500);//wait 500mil
-    digitalWrite(ledRed,HIGH);
-    delay(500);
-  }*/
+*/

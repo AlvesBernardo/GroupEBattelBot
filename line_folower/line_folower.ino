@@ -17,7 +17,8 @@
   int motorAPin2 = 10; //right wheel forward
   int motorAPin1 = 11; //right wheel backwards
 
-  int pinArr[]={A7, A6, A5, A4, A3, A2, A1, A0};
+  int pinArr[]={A7, A6, A5, A4, A3, A2, A1, A0};//initialisation of pins
+  int posVal[]={-4,-3,-2,-1,1,2,3,4};//possible values
 
   int position = 0;
 
@@ -33,21 +34,24 @@ void setup() {
 
 }
 //=====================[ LOOP BEGINING ] =======================
-int sensRead[7];
+int sensRead[8];//empty array for reading results
 void loop() {
   delay(1000);
-  for(int i = 0; i<7; i++){
-    if(analogRead(pinArr[i])>925){
+  for(int i = 0; i<8; i++){
+    if(analogRead(pinArr[i])>750){
       sensRead[i]=1;
     }
-    else if(analogRead(pinArr[i])<400){
+    else if(analogRead(pinArr[i])<500){
       sensRead[i]=0;
     }
-  }
-  /*for(int i=0; i<7; i++){
+  }//the sensors reading are stored in previously empty array
+  /*
+  for(int i=0; i<8; i++){
     Serial.print(sensRead[i]);
     Serial.print("-");
   }
+  Serial.println("-");
+  /*
   Serial.println("-");
   if(sensRead[1]==0){
     goForward();
@@ -55,11 +59,10 @@ void loop() {
   else{
     stop();
   }*/
-  //Serial.println(conversion(sensRead));
 
-  int position = conversion(sensRead);
+  int position = conversion(sensRead);//conversts reading to position
   Serial.println(position);
-  move(position);
+  move(position);//move
 }
 //=========================[ END OF PROGGRAM]=======================
 
@@ -74,30 +77,25 @@ void stop(){
   analogWrite(motorBPin1, 0);
   analogWrite(motorAPin2, 0);
 }
-int conversion(int reading[]){
+int conversion(int reading[]){//first of all it checks for outliers such as 10000000 and 00000001;
   int position = 0;
-  int relativePos = -4;
-  if((reading[0]==1) && (reading[1]==0) && (reading[2]==0) && (reading[3]==0) && (reading[4]==0) && (reading[5]==0) && (reading[6]==0) && (reading[7]==0)){
-      position = -6;
+  if(reading[0]==1 && reading[1]==0 && reading[2]==0 && reading[3]==0 && reading[4]==0 && reading[5]==0 && reading[6]==0 && reading[7]==0){
+      position = -7;
       return position;
     }
-  if((reading[0]==0) && (reading[1]==0) && (reading[2]==0) && (reading[3]==0) && (reading[4]==0) && (reading[5]==0) && (reading[6]==0) && (reading[7]==1)){
-    position = 6;
+  if(reading[0]==0 && reading[1]==0 && reading[2]==0 && reading[3]==0 && reading[4]==0 && reading[5]==0 && reading[6]==0 && reading[7]==1){
+    position = 7;
     return position;
-  }
-  for(int i = 0; i<7; i++){
+  }//if it isnt an outlier it goes here
+  for(int i = 0; i<8; i++){
     if(reading[i]==1){
-      position=position+relativePos;
-    }
-    relativePos++;
-    if(relativePos==0){
-      relativePos++;
+      position=position+posVal[i];//this array are all the values. If the reading is 1 it sums if it is 0, it does nothing that way even if it is 11110000 it will work
     }
   }
-  return position;
+  return position;//returns position
 }
 
-void move(int position){
+void move(int position){//movement based on the reading of position
   if(position == 0){
     analogWrite(motorBPin1, 250);
     analogWrite(motorAPin2, 250);    
@@ -112,7 +110,7 @@ void move(int position){
     analogWrite(motorBPin1, 138);
     analogWrite(motorAPin2, 250);
   }
-  if(position<(-6)){
+  if(position<(-7)){
     analogWrite(motorBPin1, 250);
     analogWrite(motorAPin2, 138);
   }

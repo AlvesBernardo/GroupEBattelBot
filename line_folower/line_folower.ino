@@ -12,6 +12,10 @@
   const int PinLight6=A6;
   const int PinLight7=A7;
 
+  const int trunRatio = 25;
+  const int baseSpeed = 250;
+  const int minSpeed = 75;
+
   int motorBPin2 = 6; //left wheel backward
   int motorBPin1 = 9; //left wheel forward
   int motorAPin2 = 10; //right wheel forward
@@ -36,7 +40,6 @@ void setup() {
 //=====================[ LOOP BEGINING ] =======================
 int sensRead[8];//empty array for reading results
 void loop() {
-  delay(1000);
   for(int i = 0; i<8; i++){
     if(analogRead(pinArr[i])>750){
       sensRead[i]=1;
@@ -97,21 +100,21 @@ int conversion(int reading[]){//first of all it checks for outliers such as 1000
 
 void move(int position){//movement based on the reading of position
   if(position == 0){
-    analogWrite(motorBPin1, 250);
-    analogWrite(motorAPin2, 250);    
+    analogWrite(motorBPin1, baseSpeed);
+    analogWrite(motorAPin2, baseSpeed);    
   }
   if(position>0){
-    analogWrite(motorBPin1, 250-(16*position));
+    analogWrite(motorAPin2, baseSpeed-(trunRatio*position));
   }
   if(position<0){
-    analogWrite(motorAPin2, 250+(16*position));    
+    analogWrite(motorBPin1, baseSpeed+(trunRatio*position));    
   }
   if(position>6){
-    analogWrite(motorBPin1, 138);
-    analogWrite(motorAPin2, 250);
+    analogWrite(motorBPin1, baseSpeed);
+    analogWrite(motorAPin2, minSpeed);
   }
   if(position<(-7)){
-    analogWrite(motorBPin1, 250);
-    analogWrite(motorAPin2, 138);
+    analogWrite(motorBPin1, minSpeed);
+    analogWrite(motorAPin2, baseSpeed);
   }
 }

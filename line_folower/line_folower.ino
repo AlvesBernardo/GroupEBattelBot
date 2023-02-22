@@ -3,9 +3,8 @@
 *************************/
   
 //==================[ DEFINITION OF PINS ]====================
-const int trunRatio = 25;
+const int trunRatio = 35;
 const int baseSpeed = 250;
-const int minSpeed = 75;
 
 const int motorBPin2 = 6; //left wheel backward
 const int motorBPin1 = 9; //left wheel forward

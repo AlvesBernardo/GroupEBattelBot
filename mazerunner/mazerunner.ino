@@ -83,7 +83,7 @@ void logLineSensors() {
   }
   Serial.print("\n");
 }
-#endif DEBUG
+#endif
 boolean isAllDark() {
   int reading;
   for (int pin : lineSensors) {
@@ -122,7 +122,7 @@ void releaseGripper() {
   #endif
 }
 void holdGripper() {
-  gripper.write(0);
+  gripper.write(50);
   #ifdef DEBUG
   Serial.print("holdGripper()\n");
   #endif

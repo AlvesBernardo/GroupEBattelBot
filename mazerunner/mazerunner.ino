@@ -64,100 +64,36 @@ const int ERIGHT = 6;
 
 int rotorDirection = STRAIGHT;
 
-class LineSensor {
-private:
-  int m_sensors[NumLineSensors] {};
-  int m_darkThreshold = 650;
-  // TODO: remove m_strictness from code before submitting the project
-  double m_strictness = 1.0; // strictness determines how great a % score should be in order for the function to return true
-  // values below 1 make the program less reliant on every sensor working perfectly, so the robot might work even if damaged
-  #ifdef DEBUG
-  // even in debug mode, we might want to switch off the output log to make sure the other logs are clearly visible
-  bool m_logOutput = true;
-  #endif
-public:
-  LineSensor(int left4, int left3, int left2, int left1, int right1, int right2, int right3, int right4) {
-    int tempArray[] = {left4, left3, left2, left1, right1, right2, right3, right4};
-    for (int i = 0; i >= NumLineSensors; i++) {
-      m_sensors[i] = tempArray[i];
-      pinMode(tempArray[i], INPUT);
-    }
-  }
-  #ifdef DEBUG
-  void setLogOutput(bool value) {
-    m_logOutput = value;
-  }
-  #endif
-  void setDarkThreshold(int threshold) {
-    m_darkThreshold = threshold;
-  }
-  void setStrictness(double strictness) {
-    m_strictness = strictness;
-  }
-  // not implemented
-  int getFirstDarkRegion() {
-    int result = -1;
-    int reading;
-    for (int pin : m_sensors) {
-      reading = analogRead(pin);
-      if (reading > m_darkThreshold) {
-        result = pin;
-        break;
-      }
-    }
-    #ifdef DEBUG
-    if (m_logOutput) {
-      Serial.print("LineSensor.getFirstDarkRegion(): pin ");
-      Serial.print(result);
-      Serial.print(" has value of ");
-      Serial.print(result!=-1? reading : 0);
-      Serial.print(".\n");
-    }
-    #endif
-    return result;
-  }
-  int getCountDarkRegions() {
-    double count = 0;
-    #ifdef DEBUG
-    if (m_logOutput) {Serial.print("Line Sensor Output (left to right): ");}
-    #endif
-    for (int pin : m_sensors) {
-      auto reading = analogRead(pin);
-      if (reading > m_darkThreshold) {
-        count += 1;
-      }
-      #ifdef DEBUG
-      if (m_logOutput) {Serial.print(reading);Serial.print("; ");}
-      #endif
-    }
-    #ifdef DEBUG
-    if (m_logOutput) {Serial.print("total dark regions: ");Serial.print(count); Serial.print(".\n");}
-    #endif
-    return count;
-  }
-  bool isDark() {
-    double count = 0;
-    #ifdef DEBUG
-    if (m_logOutput) {Serial.print("Line Sensor Output (left to right): ");}
-    #endif
-    for (int pin : m_sensors) {
-      auto reading = analogRead(pin);
-      if (reading > m_darkThreshold) {
-        count += 1;
-      }
-      #ifdef DEBUG
-      if (m_logOutput) {Serial.print(reading);Serial.print(", ");}
-      #endif
-    }
-    #ifdef DEBUG
-    if (m_logOutput) {Serial.print("\n");}
-    #endif
-    return (count / NumLineSensors) >= m_strictness;
-  }
-};
 
-
-auto lineSensors = new LineSensor(A6, A7, A1, A0, A2, A3, A4, A5);
+// LINE SENSORS
+int g_darkThreshold = 650;
+int lineSensors[] = {A6, A7, A1, A0, A2, A3, A4, A5}; // pins must be in order from left to right
+void initLineSensor() {
+  // initialize all the pins before using them
+  for (int pin : lineSensors) {
+    pinMode(pin, INPUT);
+  }
+}
+#ifdef DEBUG
+void logLineSensors() {
+  Serial.print("Line Sensor Readings: ");
+  for (int pin : lineSensors) {
+    Serial.print(analogRead(pin));
+    Serial.print(", ");
+  }
+  Serial.print("\n");
+}
+#endif DEBUG
+boolean isAllDark() {
+  int reading;
+  for (int pin : lineSensors) {
+    reading = analogRead(pin);
+    if (reading < g_darkThreshold) {
+      return false;
+    }
+  }
+  return true;
+}
 
 double getDistanceCm() {
   digitalWrite(SonarTrigPin, LOW); // clean any pulses
@@ -351,6 +287,7 @@ void setup() {
   rotor.attach(RotorPin);
   holdGripper();
   rotorStraight();
+  initLineSensor();
 }
 
 const int distanceThreshold = 15;

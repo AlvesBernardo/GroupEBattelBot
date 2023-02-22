@@ -12,13 +12,27 @@
 const int trigPin = 12;
 const int echoPin = 13;
 const int servoPin = 4;
-//defining motors
+//defining motors and their speeds and array
 const int motorPin = 11; //A1
 const int motorPin2 = 10; //A2
 const int motorPin3 = 6; //B1
 const int motorPin4 = 5; //B2
 const int motorR1 = 9  ;//R1
 const int motorR2 = 3; //R2
+const int turningRatio = 25;
+const int basicSpeed = 250;
+const int minumumSpeed = 75;
+int posVal[] = { -4, -3, -2, -1, 1, 2, 3, 4}; //possible values
+int positionOfRobot = 0;
+//line senor pin
+int arrayForSensors[] = {A0, A1, A2, A3, A4, A5, A6, A7};
+
+
+const int trig = 4;
+const int echo = 2;
+
+
+
 
 // defines variables
 long duration;
@@ -33,18 +47,10 @@ int buttonState = 0;
 
 
 
-//line senor pin
-const int lineSenor1 = A0;
-const int lineSenor2 = A1;
-const int lineSenor3 = A2;
-const int lineSenor4 = A3;
-const int lineSenor5 = A4;
-const int lineSenor6 = A5;
-const int lineSenor7 = A6;
-const int lineSenor8 = A7;
 
-//putting in into an array cause it's cool 
-int pinArray[] = {A0,A1,A2,A3,A4,A5,A6,A7};
+
+//putting in into an array cause it's cool
+int pinArray[] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
 
 
@@ -59,20 +65,24 @@ Adafruit_NeoPixel pixels(NUMPIXELS, neoPIN, NEO_GRB + NEO_KHZ800);
 Servo servo;
 int angle = 10;
 
-
 //bluetooth adapter
 int state = 0;
 
 
 
 void setup() {
+
+  //==================[ Leds ]====================
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-  Serial.begin(9600); // Starts the serial communication
+  Serial.begin(38400); // Starts the serial communication
   pinMode(neoPIN, OUTPUT); // neo pixel as output
   pixels.begin();         //begin it
   pixels.setBrightness(50);
   pixels.show(); // Initialize all pixels to 'off'
+
+
+  //==================[ Motors]====================
   pinMode(motorPin2, OUTPUT);
   pinMode (motorPin4, OUTPUT);
   pinMode (motorR1, OUTPUT);
@@ -83,44 +93,40 @@ void setup() {
   pinMode(buttonPin, INPUT);
 
 
-  //attach servo object
+  //==================[ Grippers ]====================
   servo.attach(4);
   servo.write(angle);
 
 
-  //declaring iuput for lineSenor
-  pinMode(lineSenor1, INPUT);
-  pinMode(lineSenor2, INPUT);
-  pinMode(lineSenor3, INPUT);
-  pinMode(lineSenor4, INPUT);
-  pinMode(lineSenor5, INPUT);
-  pinMode(lineSenor6, INPUT);
-  pinMode(lineSenor7, INPUT);
-  pinMode(lineSenor8, INPUT);
+  //==================[ LineSensor ]====================
+  pinMode(arrayForSensors, INPUT);
+
+
+
+
   // scan from 0 to 180 degrees
 
-
-   servo.attach(4);
-   for (angle = 180; angle >= 0; angle -= 1){
-    servo.write(angle);
-    delay(15);
-    }
-
-    
-   gripper();
+  /*
+     servo.attach(4);
+     for (angle = 180; angle >= 0; angle -= 1){
+      servo.write(angle);
+      delay(15);
+      }
 
 
-   //bluethooth
+     gripper();
+
+  */
+
 
   //Serial.begin(38400); // Default communication rate of the Bluetooth module
- 
 
-  startingPower();
+
 }
 
 
 
-
+int sensRead[8];//empty array for reading results
 void loop() {
 
   buttonState = digitalRead(buttonPin);
@@ -147,85 +153,88 @@ void loop() {
 
 
 
-  //line sensor if statements
-  /*if ((analogRead(lineSenor2)   >=  800) && (analogRead(lineSenor3)   >=  800)) {
-    forward();
-  }
-  else if ((analogRead(lineSenor7)  >=  800) && (analogRead(lineSenor8)  >= 800 )) {
-    turnRight();
-  }
-  else if ((analogRead(lineSenor5) >= 800) && (analogRead(lineSenor6)  >=  800)) {
-    turnLeft();
-  }
-//  if((digitalRead(distanc) == 1)&&(digitalRead(lineSensorLeft) == 1)){Stop();}
-*/
-  //calling the sensore function
-  loopForSensor();
+  //==================[ Grippers ]====================
+  servo.write(100); //Sends a signal for the servo to go to the 0 degrees position
+  delay(3000);
+ // servo.write(45); //Sends a signal for the servo to go to the 180 degrees position
+  //delay(3000);
 
 
-
-  
-
-
-
-
-  // now scan back from 180 to 0 degrees
- if(distance <25){
-   for (angle = 180; angle >= 0; angle -= 1){
-    servo.write(angle);
-    delay(15);
-    }
+  //bluetooth
+  bluethootAdapter();
+  if(Serial.available() > 0){ // Checks whether data is comming from the serial port
+    state = Serial.read(); // Reads the data from the serial port
  }
 
+  //==================[ Moving ]====================
+  if (detectDistance()) {
+    stopCar();
+  }
+  else {
+    for (int i = 0; i < 8; i++) {
+      if (analogRead(arrayForSensors[i]) > 800) {
+        sensRead[i] = 1;
+      }
+      else if (analogRead(arrayForSensors[i]) < 550) {
+        sensRead[i] = 0;
+      }
+    }//the sensors reading are stored in previously empty array
+    int positionOfRobot = conversion(sensRead);//conversts reading to position
+    Serial.println(positionOfRobot);
+    loopForSensor(positionOfRobot);//move
+  }
+
+}
 
 
-   //bluetooth
-   //bluethootAdapter();
+/*    =======================*/
+/*    ======[funtions] ========*/
+/*    =======================*/
 
-  
+
+int conversion(int reading[]) { //first of all it checks for outliers such as 10000000 and 00000001;
+  int positionOfRobot = 0;
+  if (reading[0] == 1 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
+    positionOfRobot = -7;
+    return positionOfRobot;
+  }
+  if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 1) {
+    positionOfRobot = 7;
+    return positionOfRobot;
+  }//if it isnt an outlier it goes here
+  for (int i = 0; i < 8; i++) {
+    if (reading[i] == 1) {
+      positionOfRobot = positionOfRobot + posVal[i]; //this array are all the values. If the reading is 1 it sums if it is 0, it does nothing that way even if it is 11110000 it will work
+    }
+  }
+  return positionOfRobot;//returns position
 }
 
 
 
-/*    ======[funtions] ========*/
+bool detectDistance() {
 
-
-void gripper(){
-
-
- if(distance >25){
-  for (angle = 10; angle <= 180; angle += 1){
-    servo.write(angle);
-    delay(15);
-    }
- }
-  
-  }
-
-
-void detectDistance() {
-
-  if (distance > 25) {
+  if (distance > 6) {
     //if distance above 10 neopixel off
     for (int i = 0; i < NUMPIXELS; i++) {
       pixels.setPixelColor(i, pixels.Color(137, 207, 240));
       pixels.show();
     }
 
-
-
   } else {
     //distance less then 10 neopixel on
-    
-      pixels.setPixelColor(3, pixels.Color(140, 255, 0 ));
-        pixels.setPixelColor(0, pixels.Color(140, 255, 0 ));
-        pixels.setPixelColor(1, pixels.Color(137, 207, 240));
-        pixels.setPixelColor(2, pixels.Color(137, 207, 240));
-        analogWrite(motorPin2, 0); //Right Motor forword Pin
-        analogWrite(motorPin4, 0); //Left Motor forward Pin
-        pixels.show();
 
-    
+    pixels.setPixelColor(3, pixels.Color(140, 255, 0 ));
+    pixels.setPixelColor(0, pixels.Color(140, 255, 0 ));
+    pixels.setPixelColor(1, pixels.Color(137, 207, 240));
+    pixels.setPixelColor(2, pixels.Color(137, 207, 240));
+    analogWrite(motorPin2, 0); //Right Motor forword Pin
+    analogWrite(motorPin4, 0); //Left Motor forward Pin
+    pixels.show();
+    stopCar();
+
+
+
 
   }
 
@@ -233,72 +242,43 @@ void detectDistance() {
 
 }
 
+//loop to calibrate our sensors
 
-//loop to calibrate our sensors 
-int amounntOfSensore[7];
-void loopForSensor(){
-  
-  for(int i = 0; i<7; i++){
-    if(analogRead(pinArray[i])>880){
-      amounntOfSensore[i]=1;
+void loopForSensor(int positionOfRobot) {
+  if (positionOfRobot == 0) {
+    analogWrite(motorPin2, basicSpeed);
+    analogWrite(motorPin4, basicSpeed);
+  }
+  if (positionOfRobot > 0) {
+    analogWrite(motorPin2, basicSpeed - (turningRatio * positionOfRobot));
+    analogWrite(motorPin4, basicSpeed);
+  }
+  if (positionOfRobot < 0) {
+    analogWrite(motorPin2, basicSpeed + (turningRatio * positionOfRobot));
+    analogWrite(motorPin4, basicSpeed);
+  }
+
+
+
+}
+
+
+
+
+
+void gripper() {
+
+  if (distance > 25) {
+    for (angle = 10; angle <= 180; angle += 1) {
+      servo.write(angle);
+      delay(15);
     }
-    else{
-      amounntOfSensore[i]=0;
-    }
   }
-  for(int i=0; i<7; i++){
-    Serial.print(amounntOfSensore[i]);
-    Serial.print("-");
-  }
-  
-  Serial.println("");
-  //different possitons 
-   int array1[]={0,0,0,0,0,0,0,0};
-   int array2[]={1,1,0,0,0,0,0,0};
-   int array3[]={0,1,1,0,0,0,0,0};
-   int array4[]={0,0,1,1,0,0,0,0};
-   int array5[]={0,0,0,1,1,0,0,0};
-   int array6[]={0,0,0,0,1,1,0,0};
-   int array7[]={0,0,0,0,0,1,1,0};
-   int array8[]={0,0,0,0,0,0,1,1};
-   int array9[]={1,1,1,1,1,1,1,1};
 
-  //giving the array values
-
-  
- 
-  if(amounntOfSensore == array1){
-      forward();
-    }else if(amounntOfSensore == array5){
-      forward();
-      }
-    else if (amounntOfSensore== array2){
-      turnRight();
-      }
-      else if (amounntOfSensore== array3){
-      turnRight();
-      }
-       else if (amounntOfSensore == array4){
-      turnRight();
-      }
-       else if (amounntOfSensore == array6){
-      turnLeft();
-      }
-       else if (amounntOfSensore == array7){
-      turnLeft();
-      }
-       else if (amounntOfSensore == array8){
-      turnLeft();
-      } else if (amounntOfSensore == array9){
-        stopCar();
-        }
+}
 
 
 
-
-  
-  
-  }
 
 void forward() {
   analogWrite(motorPin2, 180);
@@ -325,7 +305,7 @@ void stopCar() {
   analogWrite(motorPin2, 0); //Right Motor forword Pin
   analogWrite(motorPin, 0); //Right Motor backword Pin
   analogWrite(motorPin3, 0); //Left Motor backword Pin
-  analogWrite(motorPin4, 150); //Left Motor forward Pin
+  analogWrite(motorPin4, 0); //Left Motor forward Pin
 
 }
 
@@ -343,28 +323,6 @@ void startingPower() {
 
 
 
-void showLineSensorReading() {
-
-  Serial.print(analogRead(lineSenor1));
-  Serial.print(",");
-  Serial.print(analogRead(lineSenor2));
-  Serial.print(",");
-  Serial.print(analogRead(lineSenor3));
-  Serial.print(",");
-  Serial.print(analogRead(lineSenor4));
-  Serial.print(",");
-  Serial.print(analogRead(lineSenor5));// pins right side
-  Serial.print(",");
-  Serial.print(analogRead(lineSenor6));//pins right side
-  Serial.print(",");
-  Serial.print(analogRead(lineSenor7));//pins left side
-  Serial.print(",");
-  Serial.print(analogRead(lineSenor8)); //pins left side
-  Serial.println(",");
-  delay(50);
-
-}
-
 
 
 
@@ -374,18 +332,17 @@ void showLineSensorReading() {
 
 
 
-/*
-void bluethootAdapter(){
-  
+
+  void bluethootAdapter(){
 
 
- if (state == '0') {
+
+  if (state == '0') {
   state = 0;
- }
- else if (state == '1') {
-  
-  state = 0;
- } 
-  
   }
-*/
+  else if (state == '1') {
+
+  state = 0;
+  }
+
+  }

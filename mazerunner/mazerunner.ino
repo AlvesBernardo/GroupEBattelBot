@@ -7,7 +7,7 @@
 #include <Servo.h>
 
 /*
- * While developing the robot, we need to log crucial information from the 
+ * While developing the software for the robot, we need to log crucial information from the 
  * sensors and code to know how it perceives and reacts to its environment.
  * However, the debugging tools use up time and available memory, so we need 
  * a way to disable them without introducing an additional run-time cost to the program.
@@ -39,6 +39,7 @@ const int pixelFrontLeft = 3;
 Adafruit_NeoPixel pixels(totalPixels, NeoPixelPin, NEO_GRB + NEO_KHZ800);
 
 // some colors to simplify the use of sensors
+const uint32_t blue_green = pixels.Color(200, 0, 50);
 const uint32_t green = pixels.Color(255, 0, 0);
 const uint32_t red = pixels.Color(0, 255, 0);
 const uint32_t blue = pixels.Color(0, 0, 255);
@@ -52,6 +53,16 @@ Servo gripper;
 Servo rotor;
 
 const int NumLineSensors = 8;
+
+const int STRAIGHT = 0;
+const int SLEFT = 1;
+const int LEFT = 2;
+const int ELEFT = 3;
+const int SRIGHT = 4;
+const int RIGHT = 5;
+const int ERIGHT = 6;
+
+int rotorDirection = STRAIGHT;
 
 class LineSensor {
 private:
@@ -242,42 +253,49 @@ void rotorExtremeLeft() {
   #ifdef DEBUG
   Serial.print("rotorExtremeLeft()\n");
   #endif
+  rotorDirection = ELEFT;
   rotor.write(180);
 }
 void rotorLeft() {
   #ifdef DEBUG
   Serial.print("rotorLeft()\n");
   #endif
+  rotorDirection = LEFT;
   rotor.write(135);
 }
 void rotorSlightLeft() {
   #ifdef DEBUG
   Serial.print("rotorSlightLeft()\n");
   #endif
+  rotorDirection = SLEFT;
   rotor.write(105);
 }
 void rotorStraight() {
   #ifdef DEBUG
   Serial.print("rotorStraight()\n");
   #endif
+  rotorDirection = STRAIGHT;
   rotor.write(90);
 }
 void rotorSlightRight() {
   #ifdef DEBUG
   Serial.print("rotorSlightRight()\n");
   #endif
+  rotorDirection = SRIGHT;
   rotor.write(75);
 }
 void rotorRight() {
   #ifdef DEBUG
   Serial.print("rotorRight()\n");
   #endif
+  rotorDirection = RIGHT;
   rotor.write(45);
 }
 void rotorExtremeRight() {
   #ifdef DEBUG
   Serial.print("rotorExtremeRight()\n");
   #endif
+  rotorDirection = ERIGHT;
   rotor.write(0);
 }
 void frontLights(uint32_t color) {
@@ -307,6 +325,10 @@ void rightLights(uint32_t color) {
   pixels.setPixelColor(pixelFrontRight, color);
   pixels.show();
 }
+void clearLights() {
+  pixels.clear();
+  pixels.show();
+}
 
 void setup() {
   // put your setup code here, to run once:
@@ -324,21 +346,94 @@ void setup() {
   pinMode(MotorBRPin, OUTPUT);
   pixels.begin();
   pixels.clear();
-  allLights(cyan);
+  allLights(white);
   gripper.attach(GripperPin);
   rotor.attach(RotorPin);
-  releaseGripper();
+  holdGripper();
   rotorStraight();
-  delay(500);
-  rotorExtremeLeft();
-  delay(500);
-  rotorExtremeRight();
 }
-bool external_activation = true;
+
+const int distanceThreshold = 15;
+const int adjustmentInterval = 3;
+auto lastAdjustment = millis();
+const double adjustmentThreshold = 1.1;
+
 void loop() {
-  if (!external_activation) {
-    return;
+  double distance = getDistanceCm();
+  if (rotorDirection == STRAIGHT) {
+    if (distance < distanceThreshold) {
+      halt();
+      frontLights(red);
+      rotorSlightLeft();
+      leftLights(yellow);
+      delay(500);
+    } else {
+    forward();
+    pixels.clear();
+    pixels.show();
+    }
   }
-  readR1R2();
+  else {
+    if (distance > distanceThreshold) {
+      switch (rotorDirection) {
+        case SLEFT:
+        case LEFT:
+        case ELEFT:
+          rotorStraight();
+          delay(1000);
+          while (getDistanceCm() < distanceThreshold) {
+            turnLeft();
+            leftLights(orange);
+          }
+          break;
+        case SRIGHT:
+        case RIGHT:
+        case ERIGHT:
+          rotorStraight();
+          delay(1000);
+          while (getDistanceCm() < distanceThreshold) {
+            turnRight();
+            rightLights(orange);
+          }
+          break;
+      }
+    } else {
+      switch(rotorDirection) {
+        case SLEFT:
+          rotorLeft();
+          leftLights(yellow);
+          delay(500);
+          break;
+        case LEFT:
+          rotorExtremeLeft();
+          leftLights(yellow);
+          delay(500);
+          break;
+        case ELEFT:
+          rotorSlightRight();
+          rightLights(yellow);
+          delay(1500);
+          break;
+        case SRIGHT:
+          rotorRight();
+          rightLights(yellow);
+          delay(500);
+          break;
+        case RIGHT:
+          rotorExtremeRight();
+          rightLights(yellow);
+          delay(500);
+        case ERIGHT:
+          rotorStraight();
+          frontLights(cyan);
+          delay(500);
+        case STRAIGHT:
+          rotorSlightLeft();
+          leftLights(yellow);
+          backward();
+          delay(500);
+      }
+    }
+  }
   
 }

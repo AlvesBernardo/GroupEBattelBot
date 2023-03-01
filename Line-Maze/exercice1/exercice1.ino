@@ -12,6 +12,8 @@
 const int trigPin = 12;
 const int echoPin = 13;
 const int servoPin = 4;
+
+
 //defining motors and their speeds and array
 const int motorPin = 11; //A1
 const int motorPin2 = 10; //A2
@@ -19,7 +21,7 @@ const int motorPin3 = 6; //B1
 const int motorPin4 = 5; //B2
 const int motorR1 = 9  ;//R1
 const int motorR2 = 3; //R2
-const int turningRatio = 25;
+const int turningRatio = 35;
 const int basicSpeed = 250;
 const int minumumSpeed = 75;
 int posVal[] = { -4, -3, -2, -1, 1, 2, 3, 4}; //possible values
@@ -49,10 +51,6 @@ int buttonState = 0;
 
 
 
-//putting in into an array cause it's cool
-int pinArray[] = {A0, A1, A2, A3, A4, A5, A6, A7};
-
-
 
 //varaible for full power at the begininng
 int period = 1000;
@@ -67,6 +65,8 @@ int angle = 10;
 
 //bluetooth adapter
 int state = 0;
+int rx =8; //reciver
+int tx =  2; //transmiter
 
 
 
@@ -75,7 +75,6 @@ void setup() {
   //==================[ Leds ]====================
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-  Serial.begin(38400); // Starts the serial communication
   pinMode(neoPIN, OUTPUT); // neo pixel as output
   pixels.begin();         //begin it
   pixels.setBrightness(50);
@@ -103,9 +102,6 @@ void setup() {
 
 
 
-
-  // scan from 0 to 180 degrees
-
   /*
      servo.attach(4);
      for (angle = 180; angle >= 0; angle -= 1){
@@ -117,9 +113,12 @@ void setup() {
      gripper();
 
   */
+  
+ //==================[ bluetoth ]====================
+   pinMode(tx, OUTPUT);
+   pinMode(rx, INPUT);
 
-
-  //Serial.begin(38400); // Default communication rate of the Bluetooth module
+  Serial.begin(9600);
 
 
 }
@@ -339,10 +338,12 @@ void startingPower() {
 
   if (state == '0') {
   state = 0;
+  Serial.println("Hey");
   }
   else if (state == '1') {
 
   state = 0;
+  Serial.println("Hey");
   }
 
   }

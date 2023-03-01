@@ -29,7 +29,6 @@ int positionOfRobot = 0;
 //line senor pin
 int arrayForSensors[] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
-
 const int trig = 4;
 const int echo = 2;
 
@@ -65,6 +64,7 @@ int angle = 10;
 
 //bluetooth adapter
 int state = 0;
+char data = 0;
 int rx =8; //reciver
 int tx =  2; //transmiter
 
@@ -73,8 +73,8 @@ int tx =  2; //transmiter
 void setup() {
 
   //==================[ Leds ]====================
-  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
-  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  pinMode(trigPin, OUTPUT);  // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT);  // Sets the echoPin as an Input
   pinMode(neoPIN, OUTPUT); // neo pixel as output
   pixels.begin();         //begin it
   pixels.setBrightness(50);
@@ -84,6 +84,8 @@ void setup() {
   //==================[ Motors]====================
   pinMode(motorPin2, OUTPUT);
   pinMode (motorPin4, OUTPUT);
+  pinMode(motorPin, OUTPUT);
+  pinMode (motorPin3, OUTPUT);
   pinMode (motorR1, OUTPUT);
   pinMode (motorR2, OUTPUT);
 
@@ -98,7 +100,7 @@ void setup() {
 
 
   //==================[ LineSensor ]====================
-  pinMode(arrayForSensors, INPUT);
+  //pinMode(arrayForSensors, INPUT);
 
 
 
@@ -148,7 +150,7 @@ void loop() {
 
 
 
-  detectDistance(); //call funtion to detect distance to certain object
+ 
 
 
 
@@ -190,9 +192,23 @@ void loop() {
 /*    ======[funtions] ========*/
 /*    =======================*/
 
+  void bluethootAdapter(){
+
+    if(Serial.available() > 0)       /*check for serial data availability*/
+    {
+        data = Serial.read();        /*read data coming from Bluetooth device*/
+        Serial.print(data);          /*print values on serial monitor*/
+        Serial.print("\n");          /*print new line*/
+        if(data == '1')              /*check data value*/
+            digitalWrite(3, HIGH);  /*Turn ON LED if serial data is 1*/
+        else if(data == '0')         /*check data value*/
+            digitalWrite(3, LOW);   /*Turn OFF LED if serial data is 0*/
+    }                     
+
+  }
 
 int conversion(int reading[]) { //first of all it checks for outliers such as 10000000 and 00000001;
-  int positionOfRobot = 0;
+ 
   if (reading[0] == 1 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
     positionOfRobot = -7;
     return positionOfRobot;
@@ -227,8 +243,8 @@ bool detectDistance() {
     pixels.setPixelColor(0, pixels.Color(140, 255, 0 ));
     pixels.setPixelColor(1, pixels.Color(137, 207, 240));
     pixels.setPixelColor(2, pixels.Color(137, 207, 240));
-    analogWrite(motorPin2, 0); //Right Motor forword Pin
-    analogWrite(motorPin4, 0); //Left Motor forward Pin
+    //analogWrite(motorPin2, 0); //Right Motor forword Pin
+    //analogWrite(motorPin4, 0); //Left Motor forward Pin
     pixels.show();
     stopCar();
 
@@ -279,7 +295,7 @@ void gripper() {
 
 
 
-void forward() {
+void forword() {
   analogWrite(motorPin2, 180);
   analogWrite(motorPin, 0);
   analogWrite(motorPin3, 0);
@@ -328,22 +344,3 @@ void startingPower() {
 /*-------*/
 /*bluetooth*/
 /*-------*/
-
-
-
-
-  void bluethootAdapter(){
-
-
-
-  if (state == '0') {
-  state = 0;
-  Serial.println("Hey");
-  }
-  else if (state == '1') {
-
-  state = 0;
-  Serial.println("Hey");
-  }
-
-  }

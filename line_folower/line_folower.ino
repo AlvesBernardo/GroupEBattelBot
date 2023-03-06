@@ -41,7 +41,7 @@ void setup() {
 int sensRead[8];//empty array for reading results
 void loop() {
   if(detectObject()){
-        stop();    
+        evade();    
   }
   else{
     for(int i = 0; i<8; i++){
@@ -106,7 +106,7 @@ bool detectObject(){
 
   digitalWrite(trig, HIGH);
   delayMicroseconds(5);
-  //max 200cm
+  //max 200cm. if returns more, it detected nothing.
   digitalWrite(trig, LOW);
 
 
@@ -119,5 +119,20 @@ bool detectObject(){
 }
 
 void evade(){
-
+  if(detectObject()){
+    stop();
+    analogWrite(motorBPin1, baseSpeed);
+    delay(300);
+    analogWrite(motorBPin1, baseSpeed);
+    analogWrite(motorAPin2, baseSpeed);
+    delay(800);
+    stop();
+    analogWrite(motorAPin2, baseSpeed);
+    delay(450);
+    stop();
+    analogWrite(motorBPin1, baseSpeed);
+    analogWrite(motorAPin2, baseSpeed);
+    delay(800);
+    stop();
+  }
 }

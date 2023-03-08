@@ -65,15 +65,17 @@ void loop() {
 void stop(){
   analogWrite(motorBPin1, 0);
   analogWrite(motorAPin2, 0);
+  analogWrite(motorAPin1, 0);
+  analogWrite(motorBPin2, 0);
 }
 int conversion(int reading[]){//first of all it checks for outliers such as 10000000 and 00000001;
   int position = 0;
   if(reading[0]==1 && reading[1]==0 && reading[2]==0 && reading[3]==0 && reading[4]==0 && reading[5]==0 && reading[6]==0 && reading[7]==0){
-      position = -7;
+      position = -13;
       return position;
     }
   if(reading[0]==0 && reading[1]==0 && reading[2]==0 && reading[3]==0 && reading[4]==0 && reading[5]==0 && reading[6]==0 && reading[7]==1){
-    position = 7;
+    position = 13;
     return position;
   }//if it isnt an outlier it goes here
   for(int i = 0; i<8; i++){
@@ -86,24 +88,56 @@ int conversion(int reading[]){//first of all it checks for outliers such as 1000
 
 void move(int position){//movement based on the reading of position
   if(position == 0){
+    analogWrite(motorAPin1, 0);
+    analogWrite(motorBPin2, 0);
     analogWrite(motorBPin1, baseSpeed);
     analogWrite(motorAPin2, baseSpeed);    
   }
-  if(position>0){
-    analogWrite(motorAPin2, baseSpeed-(trunRatio*position));
+  if(position>0 && position<12){
+    if(trunRatio*position<255){
+      analogWrite(motorAPin1, 0);
+      analogWrite(motorBPin2, 0);
+      analogWrite(motorAPin2, baseSpeed-(trunRatio*position));
+      analogWrite(motorBPin1, baseSpeed);
+    }
+    else{
+      analogWrite(motorAPin1, 0);
+      analogWrite(motorBPin2, 0);
+      analogWrite(motorAPin2, 0);
+      analogWrite(motorBPin1, baseSpeed);
+    }
+  }
+  if(position<0 && position>-12){
+    if(trunRatio*position>-255){
+      analogWrite(motorAPin1, 0);
+      analogWrite(motorBPin2, 0);
+      analogWrite(motorBPin1, baseSpeed+(trunRatio*position));
+      analogWrite(motorAPin2, baseSpeed);
+    }
+    else{
+      analogWrite(motorAPin1, 0);
+      analogWrite(motorBPin2, 0);
+      analogWrite(motorBPin1, 0);
+      analogWrite(motorAPin2, baseSpeed);
+    }
+  }
+  if(position>12){
+    analogWrite(motorAPin1, baseSpeed);
+    analogWrite(motorBPin2, 0);
+    analogWrite(motorAPin2, 0);
     analogWrite(motorBPin1, baseSpeed);
   }
-  if(position<0){
-    analogWrite(motorBPin1, baseSpeed+(trunRatio*position));
+  if(position<-12){
+    analogWrite(motorAPin1, 0);
+    analogWrite(motorBPin2, baseSpeed);
     analogWrite(motorAPin2, baseSpeed);
+    analogWrite(motorBPin1, 0);
   }
 }
 
 bool detectObject(){
   digitalWrite(trig, LOW);
   delayMicroseconds(2);
-
-
   digitalWrite(trig, HIGH);
   delayMicroseconds(5);
   //max 200cm. if returns more, it detected nothing.

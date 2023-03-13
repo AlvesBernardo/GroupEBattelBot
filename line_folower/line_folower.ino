@@ -15,6 +15,9 @@ int pinArr[]={A7, A6, A5, A4, A3, A2, A1, A0};//initialisation of pins
 int posVal[]={-4,-3,-2,-1,1,2,3,4};//possible values
 
 int position = 0;
+const int maxIntercectionDuration = 15;
+int curentIntercectionDuration;
+
 
 
 
@@ -36,6 +39,8 @@ void setup() {
   
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
+
+  startRace();
 }
 //=====================[ LOOP BEGINING ] =======================
 int sensRead[8];//empty array for reading results
@@ -52,8 +57,12 @@ void loop() {
         sensRead[i]=0;
       }
     }//the sensors reading are stored in previously empty array
+    
     int position = conversion(sensRead);//conversts reading to position
-    Serial.println(position);
+    /*if(){
+
+    }
+    */
     move(position);//move
   }
 }
@@ -169,4 +178,25 @@ void evade(){
     delay(800);
     stop();
   }
+}
+
+void startRace(){
+  analogWrite(motorBPin1, baseSpeed);
+  analogWrite(motorAPin2, baseSpeed);
+  delay(1000);
+  analogWrite(motorAPin1, 0);
+  analogWrite(motorBPin2, baseSpeed);//left turn start could be calibrated more precise.
+  analogWrite(motorAPin2, baseSpeed);
+  analogWrite(motorBPin1, 0);
+  delay(400);
+  stop();
+}
+bool isIntercection(int reading[]){
+  if(reading[0]==1 && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){
+    return true;
+  }
+  return false;
+}
+void raceEnd(){
+  
 }

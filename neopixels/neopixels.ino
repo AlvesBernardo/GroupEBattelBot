@@ -16,5 +16,11 @@ void setup() {
 }
 
 void loop() {
+  pixels.setPixelColor(0 ,pixels.Color(200, 200, 0));
+  pixels.show();
+  delay(100);
+  pixels.setPixelColor(0 ,pixels.Color(171, 140, 153));
+  pixels.show();
+  delay(100);
   // put your main code here, to run repeatedly:
 }

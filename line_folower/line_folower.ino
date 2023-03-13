@@ -1,7 +1,10 @@
 /*************************
 *    Line folower        *
 *************************/
-  
+//==================[INCLUSION OF STUFF]======================
+
+#include <Adafruit_NeoPixel.h>
+
 //==================[ DEFINITION OF PINS ]====================
 const int trunRatio = 35;
 const int baseSpeed = 250;
@@ -15,10 +18,17 @@ int pinArr[]={A7, A6, A5, A4, A3, A2, A1, A0};//initialisation of pins
 int posVal[]={-4,-3,-2,-1,1,2,3,4};//possible values
 
 int position = 0;
-const int maxIntercectionDuration = 15;
-int curentIntercectionDuration;
+const int maxIntercectionDuration = 10;//mesuring unit used to stop, the smaller it is the faster it stops. Make it too small it will stop at the intersections.
+int curentIntercectionDuration = 0;
 
-
+int neoPin = 7;//neopixels declaration
+int NUMPIXELS = 4;
+const int GRBdef = {171, 140, 153};
+const int GRBforward = {255, 0, 0};
+const int GRBturn = {165, 255, 0};
+const int GRBextremeTurn = {0, 255, 255};
+const int GRBstop = {0, 255, 0};
+const int GRBevsasion = {0, 0, 255};
 
 
 const int trig = 4;
@@ -40,6 +50,10 @@ void setup() {
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
 
+  pinMode(neoPin,OUTPUT);
+  pixels.begin();
+  pixels.setBrightness(50);
+
   startRace();
 }
 //=====================[ LOOP BEGINING ] =======================
@@ -59,10 +73,23 @@ void loop() {
     }//the sensors reading are stored in previously empty array
     
     int position = conversion(sensRead);//conversts reading to position
-    /*if(){
 
+    if(isIntercection(sensRead)){
+      curentIntercectionDuration++;
+      Serial.println(curentIntercectionDuration);
+            
     }
-    */
+    else{
+      curentIntercectionDuration = 0;
+    }
+    if(curentIntercectionDuration>maxIntercectionDuration){
+      stop();
+      while(true){
+        delay(1);
+      }
+    }
+    //Serial.println(curentIntercectionDuration);
+    //Serial.println(position);
     move(position);//move
   }
 }
@@ -183,12 +210,12 @@ void evade(){
 void startRace(){
   analogWrite(motorBPin1, baseSpeed);
   analogWrite(motorAPin2, baseSpeed);
-  delay(1000);
+  delay(950);
   analogWrite(motorAPin1, 0);
   analogWrite(motorBPin2, baseSpeed);//left turn start could be calibrated more precise.
   analogWrite(motorAPin2, baseSpeed);
   analogWrite(motorBPin1, 0);
-  delay(400);
+  delay(415);
   stop();
 }
 bool isIntercection(int reading[]){

@@ -6,6 +6,7 @@
 // Servo library to make it easier to use the gripper
 #include <Servo.h>
 
+
 /*
  * While developing the software for the robot, we need to log crucial information from the 
  * sensors and code to know how it perceives and reacts to its environment.
@@ -23,7 +24,7 @@ const int SonarTrigPin = 4; // distance sensor requires an input pin to start se
 const int SonarEchoPin = 7; // distance sensor uses this pin to output the signal
 const int RotorPin = 8;     // rotates the distance sensor
 const int GripperPin = 9;   // used by servo library to control the gripper
-const int MotorFLPin = 10; // left motor forward motion
+const int MotorFLPin = 3; // left motor forward motion
 const int MotorBLPin = 11; // left motor backward motion
 const int MotorFRPin = 6; // right motor forward motion
 const int MotorBRPin = 5; // right motor backward motion
@@ -49,8 +50,8 @@ const uint32_t magenta = pixels.Color(0, 255, 255);
 const uint32_t orange = pixels.Color(51, 255, 0);
 const uint32_t white = pixels.Color(255, 255, 255);
 
-Servo gripper;
-Servo rotor;
+Servo gripper; // controls the gripper
+Servo rotor;   // controls the rotor
 
 const int NumLineSensors = 8;
 
@@ -69,13 +70,14 @@ int rotorDirection = STRAIGHT;
 int g_darkThreshold = 650;
 int lineSensors[] = {A6, A7, A1, A0, A2, A3, A4, A5}; // pins must be in order from left to right
 void initLineSensor() {
-  // initialize all the pins before using them
+  // initialize all the pins before using the line sensor. Execute this function in setup() once
   for (int pin : lineSensors) {
     pinMode(pin, INPUT);
   }
 }
 #ifdef DEBUG
 void logLineSensors() {
+  // logs output from all line sensors
   Serial.print("Line Sensor Readings: ");
   for (int pin : lineSensors) {
     Serial.print(analogRead(pin));
@@ -85,6 +87,9 @@ void logLineSensors() {
 }
 #endif
 boolean isAllDark() {
+  #ifdef DEBUG
+  Serial.print("isAllDark() called\n");
+  #endif
   int reading;
   for (int pin : lineSensors) {
     reading = analogRead(pin);
@@ -112,8 +117,8 @@ double getDistanceCm() {
   return distance;
 }
 
-const int speed_left = 255;
-const int speed_right = 255;
+const int speed_left = 150;
+const int speed_right = 150;
 
 void releaseGripper() {
   gripper.write(120);
@@ -128,10 +133,17 @@ void holdGripper() {
   #endif
 }
 
+int r1 = 0;
+int r2 = 0;
+
+void pulseCountR1() {
+  r1++;
+}
+void pulseCountR2() {
+  r2++;
+}
 
 void readR1R2() {
-  auto r1 = pulseIn(PinR1, HIGH);
-  auto r2 = pulseIn(PinR2, HIGH);
   Serial.print("R1: ");
   Serial.print(r1);
   Serial.print("; R2: ");
@@ -280,6 +292,8 @@ void setup() {
   pinMode(MotorBLPin, OUTPUT);
   pinMode(MotorFRPin, OUTPUT);
   pinMode(MotorBRPin, OUTPUT);
+  pinMode(PinR1, INPUT);
+  pinMode(PinR2, INPUT);
   pixels.begin();
   pixels.clear();
   allLights(white);
@@ -288,6 +302,8 @@ void setup() {
   holdGripper();
   rotorStraight();
   initLineSensor();
+  attachInterrupt(PinR1, pulseCountR1, RISING);
+  attachInterrupt(PinR2, pulseCountR2, RISING);
 }
 
 const int distanceThreshold = 15;
@@ -296,6 +312,9 @@ auto lastAdjustment = millis();
 const double adjustmentThreshold = 1.1;
 
 void loop() {
+  #ifdef DEBUG
+  logLineSensors();
+  #endif
   double distance = getDistanceCm();
   if (rotorDirection == STRAIGHT) {
     if (distance < distanceThreshold) {
@@ -372,5 +391,4 @@ void loop() {
       }
     }
   }
-  
 }

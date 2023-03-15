@@ -4,6 +4,7 @@
 #include <avr/power.h>
 #endif
 //#include <Servo.h>
+#include<SoftwareSerial.h>
 
 //defining pins for distance sensor
 const int trigPin = 12;
@@ -55,11 +56,9 @@ int angle = 10;
 //bluetooth adapter
 int state = 0;
 char data = 0;
-int rx =8; //reciver
-int tx =  2; //transmiter
 const int trig = 4;
 const int echo = 2;
-
+SoftwareSerial bt(2,3); /* (Rx,Tx) */
 
 void setup() {
   //motors declaration 
@@ -80,8 +79,8 @@ void setup() {
 
 
 
-   //==================[ Leds ]====================
-   pinMode(trigPin, OUTPUT);  // Sets the trigPin as an Output
+  //==================[ Leds ]====================
+  pinMode(trigPin, OUTPUT);  // Sets the trigPin as an Output
   pinMode(echoPin, INPUT);  // Sets the echoPin as an Input
   pinMode(neoPIN, OUTPUT); // neo pixel as output
   pixels.begin();         //begin it
@@ -90,11 +89,10 @@ void setup() {
 
 
  //==================[ bluetoth ]====================
-   pinMode(tx, OUTPUT);
-   pinMode(rx, INPUT);
-
+ 
+  bt.begin(9600); /* Define baud rate for software serial communication */
   Serial.begin(9600);
-    pinMode(trig, OUTPUT);
+  pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
 
   
@@ -136,8 +134,12 @@ void loop() {
   bluethootAdapter();
   if(Serial.available() > 0){ // Checks whether data is comming from the serial port
     state = Serial.read(); // Reads the data from the serial port
- }
-
+  }
+    if (bt.available()) // If data is available on serial port 
+    {
+      Serial.write(bt.read());
+    }
+ 
 
 
   //distance 
@@ -294,6 +296,8 @@ void bluethootAdapter(){
     }                     
 
   }
+
+  
 
 
   //distance

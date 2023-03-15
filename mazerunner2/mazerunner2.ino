@@ -4,11 +4,12 @@
 #include <avr/power.h>
 #endif
 
-// We use the Servo library to control the gripper and the rotation of the distance sensor
+// We use the Servo library to control the gripper
 #include <Servo.h>
 
 /*
- * We are using preprocessor commands to disable certain functionality that 
+ * We are using preprocessor commands to disable certain functionality that could impact performance during the race
+ * enable it back to ensure that the serial monitor prints logs
 */
 #define DEBUG
 
@@ -16,17 +17,24 @@
  * PINS:
  * Available PWM pins: 3, 5, 6, 11. (9 and 10 are disabled by the Servo library) 
 */
-const int NeoPixelPin = 2;          // NeoPixel library will control the output of all four NeoPixels
-const int DistanceTrigPin = 4;      // "Encourages" the distance sensor to start working
-const int DistanceEchoPin = 7;      // Distance sensor output
-const int DistanceRotationPin = 8;  // Rotates the distance sensor
-const int GripperPin = 9;           // Gripper servo library
-const int MotorFLPin = 3;           // PWM left motor forward motion
-const int MotorBLPin = 11;          // PWM left motor backward motion
-const int MotorFRPin = 6;           // PWM right motor forward motion
-const int MotorBRPin = 5;           // PWM right motor backward motion
-const int R1Pin = 13;
-const int R2Pin = 12;
+const int NeoPixelPin = 2;                // NeoPixel library will control the output of all four NeoPixels
+const int SensorFrontTrigPin = 4;         // Trig pin for the front distance sensor
+const int SensorFrontEchoPin = 7;         // Front distance sensor output
+const int SensorLeftTrigPin = 13;         // Trig pin for the left distance sensor
+const int SensorLeftEchoPin = 12;         // Left distance sensor output
+const int SensorRightTrigPin = 8;         // Trig pin for the right distance sensor
+const int SensorRightEchoPin = 10;        // Right distance sensor output
+const int GripperPin = 9;                 // Gripper servo library
+const int MotorFLPin = 3;                 // PWM left motor forward motion
+const int MotorBLPin = 11;                // PWM left motor backward motion
+const int MotorFRPin = 6;                 // PWM right motor forward motion
+const int MotorBRPin = 5;                 // PWM right motor backward motion
+
+// useful functions for maths
+bool approxComparison(double target, double value, double margin=0.05) {
+    return (target * (1-margin) > value && target * (1+margin) < value);
+}
+
 
 // neopixels setup and functions that control the lights
 const int NumberOfNeoPixels = 4;
@@ -136,42 +144,42 @@ bool isAllDark() {
 }
 
 //Distance Sensor
-Servo rotor;
+class DistanceSensor {
+    private:
+    int m_trigPin;
+    int m_echoPin;
+    char m_pos; // 'L', 'F', 'R'
+    public:
+    DistanceSensor(char pos, int trigPin, int echoPin) {
+        m_trigPin = trigPin;
+        m_echoPin = echoPin;
+        m_pos = pos;
+        pinMode(m_trigPin, OUTPUT);
+        pinMode(m_echoPin, INPUT);
+    }
+    double getDistance() {
+        // clean up the pulse
+        digitalWrite(m_trigPin, LOW);
+        delayMicroseconds(2);
+        digitalWrite(m_trigPin, HIGH);
+        delayMicroseconds(5);
+        digitalWrite(m_trigPin, LOW);
+        delayMicroseconds(2);
+        double duration = pulseIn(m_echoPin, HIGH);
+        double distance = (duration/2) / 29.1;
+        #ifdef DEBUG
+        Serial.print("Distance Sensor (");
+        Serial.print(m_pos);
+        Serial.print(") Reading (cm): ");
+        Serial.println(distance);
+        #endif
+        return distance;
+    }
+};
 
-const int angleExtremeLeft = 180;
-const int angleLeft = 135;
-const int angleSlightLeft = 105;
-const int angleStraight = 90;
-const int angleSlightRight = 75;
-const int angleRight = 45;
-const int angleExtremeRight = 0;
-
-int g_distanceSensorPosition = 0;
-
-double getDistanceSensorReading() {
-    //Clean up the pulses
-    digitalWrite(DistanceTrigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(DistanceTrigPin, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(DistanceTrigPin, LOW);
-    double duration = pulseIn(DistanceEchoPin, HIGH);
-    double distance = (duration/2) / 29.1;
-    #ifdef DEBUG
-    Serial.print("Distance Sensor Reading (cm): ");
-    Serial.println(distance);
-    #endif
-    return distance;
-}
-
-void rotateDistanceSensor(int angle = angleStraight) {
-    rotor.write(angle);
-    g_distanceSensorPosition = angle;
-    #ifdef DEBUG
-    Serial.print("Set distance sensor position to: ");
-    Serial.println(angle);
-    #endif
-}
+DistanceSensor leftDistanceSensor =  DistanceSensor('L', SensorLeftTrigPin, SensorLeftEchoPin);
+DistanceSensor frontDistanceSensor = DistanceSensor('F', SensorFrontTrigPin, SensorFrontEchoPin);
+DistanceSensor rightDistanceSensor = DistanceSensor('R', SensorRightTrigPin, SensorRightEchoPin);
 
 // Motor functions
 void moveForward(int speed_left=255, int speed_right=255) {
@@ -272,6 +280,31 @@ const int dirLeft = 5;
 const int dirStraight = 0;
 const int dirRight = -5;
 
+const double errorMargin = 0.05;
+
+void measuredTurn(int turnDirection, double errorMargin=errorMargin) {
+    double targetDistance;
+    halt();
+    clearPixels();
+    switch(turnDirection) {
+        case dirLeft:
+            targetDistance = leftDistanceSensor.getDistance();
+            leftPixels(cyan);
+            turnLeft();
+            break;
+        case dirRight:
+            targetDistance = rightDistanceSensor.getDistance();
+            rightPixels(cyan);
+            turnRight();
+        default:
+            return;
+    }
+    double currentDistance;
+    do {
+        currentDistance = frontDistanceSensor.getDistance();
+    } while (currentDistance < targetDistance * (1-errorMargin) || currentDistance > targetDistance * (1 + errorMargin));
+}
+/*
 void turnToTarget(int dir, double targetDistance) {
     targetDistance *= 0.95;
     rotateDistanceSensor(angleStraight);
@@ -296,7 +329,7 @@ void turnToTarget(int dir, double targetDistance) {
     halt();
     clearPixels();
 }
-
+*/
 void turn90(int dir) {
     switch (dir) {
         case dirLeft:
@@ -321,6 +354,9 @@ void setup() {
     #ifdef DEBUG
     Serial.begin(9600);
     Serial.println("Setup()");
+    Serial.println(0.1 == 0.1);
+    Serial.println(0.1 + 0.1 + 0.1 == 0.3);
+    Serial.println(approxComparison(0.1 + 0.1 + 0.1, 0.3));
     #endif
     pinMode(NeoPixelPin, OUTPUT);
     pinMode(GripperPin, OUTPUT);
@@ -328,13 +364,8 @@ void setup() {
     pinMode(MotorFRPin, OUTPUT);
     pinMode(MotorBLPin, OUTPUT);
     pinMode(MotorBRPin, OUTPUT);
-    pinMode(DistanceTrigPin, OUTPUT);
-    pinMode(DistanceEchoPin, INPUT);
-    pinMode(DistanceRotationPin, OUTPUT);
     initLineSensor();
     gripper.attach(GripperPin);
-    rotor.attach(DistanceRotationPin);
-    rotateDistanceSensor(angleStraight);
     allPixels(white);    
     while (!g_receivedActivationSignal) {
     }
@@ -345,6 +376,20 @@ void setup() {
 }
 
 void loop() {
+    double distanceLeft = leftDistanceSensor.getDistance();
+    double distanceFront = frontDistanceSensor.getDistance();
+    double distanceRight = rightDistanceSensor.getDistance();
+    if (distanceLeft < 20) {
+        leftPixels(red);
+    }
+    if (distanceFront < 20) {
+        frontPixels(magenta);
+    }
+    if (distanceRight < 20) {
+       rightPixels(red);
+    }
+    delay(500);
+    clearPixels();
     /*
     double prevDistance = 200;
     while (isAllLight()) {

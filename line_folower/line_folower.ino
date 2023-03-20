@@ -138,7 +138,7 @@ int conversion(int reading[]){//first of all it checks for outliers such as 1000
 }
 
 void move(int position, int reading[]){//movement based on the reading of position
-  if(reading[0]==0 && reading[1]==0 && reading[2]==0 && reading[3]==0 && reading[4]==0 && reading[5]==0 && reading[6]==0 && reading[7]==0){
+  if(reading[0]==0 && reading[1]==0 && reading[2]==0 && reading[3]==0 && reading[4]==0 && reading[5]==0 && reading[6]==0 && reading[7]==0){//failsave
     delay(100);
     return;
   }

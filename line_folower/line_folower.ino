@@ -6,6 +6,17 @@
 #include <Adafruit_NeoPixel.h>
 
 //==================[ DEFINITION OF PINS ]====================
+
+#define servoPin 8
+#define gripperPin 13
+#define servoMinPulse 500
+#define servoCenterPulse 1400 // 
+#define servoMaxPulse 2400 //in microseconds
+
+#define gripper_open_pulse 1600
+#define gripper_close_pulse  971 // 
+#define servoPulseRepeat 10 // number of pulse send to servo
+
 const int trunRatio = 35;
 const int baseSpeed = 250;
 
@@ -44,6 +55,11 @@ bool isRaceStarted = false;//switchable for testing
 //==================[ SETUP ]==================================
 void setup() {
   Serial.begin(9600);
+  
+  pinMode(servoPin, OUTPUT);
+  pinMode(gripperPin, OUTPUT);
+  digitalWrite(servoPin, LOW);
+  
   pinMode(pinArr, INPUT);
 
   pinMode(motorBPin2, OUTPUT);
@@ -63,6 +79,22 @@ void setup() {
   pixels.show();
 }
 //=====================[ LOOP BEGINING ] =======================
+
+ void servo(int pin, int length) {
+        digitalWrite(pin, HIGH);
+        delayMicroseconds(length);//in microseconds
+        digitalWrite(pin, LOW);
+        delay(20); 
+      }
+
+  void openGripper() {
+    servo(gripperPin, gripper_open_pulse);
+  }
+  
+  void closeGripper(){
+    servo(gripperPin, gripper_close_pulse);
+  }
+  
 int sensRead[8];//empty array for reading results
 void loop() {
   if(isRaceStarted){
@@ -102,6 +134,7 @@ void loop() {
     startRace();
     isRaceStarted=true;    
   }
+
 }
 //=========================[ END OF PROGGRAM]=======================
 

@@ -32,7 +32,7 @@ const int lineSenor8 = A7;// left
 int pinBlnWh[] = {A7,A6,A0,A1,A2,A3,A4,A5}; //from left to right order
 int posVal[] = { -4, -3, -2, -1, 1, 2, 3, 4}; //possible values
 int reading[8] = {};
-
+int positionRobot = 0;
 
 //speeds
 const int turningRatio = 35;
@@ -60,7 +60,7 @@ int angle = 10;
 
 
 void setup() {
-
+//==================[ Motors ]====================
   //motors declaration
   pinMode(motorPin2, OUTPUT);
   pinMode (motorPin4, OUTPUT);
@@ -68,7 +68,7 @@ void setup() {
   pinMode (motorPin3, OUTPUT);
   Serial.begin(9600); // Starts the serial communication
 
-
+//==================[ Line sensor ]====================
   //declaring iuput for lineSenor
   pinMode(lineSenor1, INPUT);
   pinMode(lineSenor2, INPUT);
@@ -81,7 +81,7 @@ void setup() {
 
 
 
-  //==================[ Leds ]====================
+  //==================[ Leds and distance ]====================
   pinMode(trigPin, OUTPUT);  // Sets the trigPin as an Output
   pinMode(echoPin, INPUT);  // Sets the echoPin as an Input
   pinMode(neoPIN, OUTPUT); // neo pixel as output
@@ -100,21 +100,22 @@ void setup() {
 void loop() {
 
 
-  showLineSensorReading();
+ 
   detectDistance();
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i <8; i++) {
     if (analogRead(pinBlnWh[i]) > 750) {
       reading[i] = 1;
     }
     else if (analogRead(pinBlnWh[i]) < 750) {
       reading[i] = 0;
     }
+    showLineSensorReading();
   }//the sensors reading are stored in previously empty array
   int positionRobot = conversion(reading);//conversts reading to position
-  Serial.println(positionRobot);
+ // 
   moving(positionRobot, reading); //move
-
-
+ 
+ //showLineSensorReading();
 
 
 
@@ -131,8 +132,8 @@ void loop() {
   // Calculating the distance
   distance = duration * 0.034 / 2;
   // Prints the distance on the Serial Monitor
-  Serial.print("Distance: ");
-  Serial.println(distance);
+  //Serial.print("Distance: ");
+  //Serial.println(distance);
 
 
 
@@ -179,33 +180,33 @@ void Stop() {
 
 void showLineSensorReading() {
 
-  Serial.print(analogRead(pinBlnWh[0]));
+  Serial.print(reading[0]);
   Serial.print(",");
-  Serial.print(analogRead(pinBlnWh[1]));
+  Serial.print(reading[1]);
   Serial.print(",");
-  Serial.print(analogRead(pinBlnWh[2]));
+  Serial.print(reading[2]);
   Serial.print(",");
-  Serial.print(analogRead(pinBlnWh[3]));
+  Serial.print(reading[3]);
   Serial.print(",");
-  Serial.print(analogRead(pinBlnWh[4]));
+  Serial.print(reading[4]);
   Serial.print(",");
-  Serial.print(analogRead(pinBlnWh[5]));
+  Serial.print(reading[5]);
   Serial.print(",");
-  Serial.print(analogRead(pinBlnWh[6]));
+  Serial.print(reading[6]);
   Serial.print(",");
-  Serial.print(analogRead(pinBlnWh[7]));
+  Serial.print(reading[7]);
 
   Serial.println("-");
-  delay(1000);
+  delay(100);
 
 }
 
 int conversion(int reading[]) { //first of all it checks for outliers such as 10000000 and 00000001;
   int positionRobot = 0;
-  if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
+  /*if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
     positionRobot = -13;
     return positionRobot;
-  }
+  }*/
 //if it isnt an outlier it goes here
   for (int i = 0; i < 7; i++) {
     if (reading[i] == 1) {

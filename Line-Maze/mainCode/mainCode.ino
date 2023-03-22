@@ -16,7 +16,7 @@ const int motorPin2 = 10; //A2
 const int motorPin3 = 6; //B1
 const int motorPin4 = 5; //B2
 
-//rotation sensors i guess
+//rotation sensors
 const int motorR1 = 3;
 const int motorR2 = 2;
 
@@ -143,14 +143,7 @@ void loop() {
   // Prints the distance on the Serial Monitor
   //Serial.print("Distance: ");
   //Serial.println(distance);
-  countL = 0;
-  if(countL > 20){
-    analogWrite(motorPin2, 0);
-    countL = 0;
-    delay(1000);
-  } else {
-    analogWrite(motorPin2, 150);
-  }
+ 
   
 
 
@@ -163,24 +156,6 @@ void loop() {
 /*    =======================*/
 /*    ======[funtions] ========*/
 /*    =======================*/
-void rotationL() {
-  countL++;
-}
-
-void rotationR() {
-  countR++;
-}
-
-void rotateLeft(int cycle){
-  countL = 0;
-  if(countL > cycle){
-    analogWrite(motorPin2, 0);
-    countL = 0;
-    delay(1000);
-  } else {
-    analogWrite(motorPin2, 150);
-  }
-}
 
 
 void forward() {
@@ -288,12 +263,7 @@ void moving(int positionRobot, int reading[]) {
       pixels.setPixelColor(i, pixels.Color(0, 0, 255));
       pixels.show();
     }
-    analogWrite(motorPin2, 0);
-    analogWrite(motorPin4, 255);
-    delay(50);
-
-
-
+  rotateLeft(105);
   }
 
 
@@ -334,4 +304,29 @@ void detectDistance() {
 
 
 
+}
+
+void rotationL() {
+  countL++;
+}
+
+void rotationR() {
+  countR++;
+}
+
+void rotateLeft(int cycle){
+  if(countL < cycle){
+    analogWrite(motorPin2, 150);
+    analogWrite(motorPin4, 0);
+    analogWrite(motorPin, 0);
+    analogWrite(motorPin3, 0);
+    
+  } else {
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, 0);
+    analogWrite(motorPin, 0);
+    analogWrite(motorPin3, 0);
+    countL = 0;
+    delay(15000);
+  }
 }

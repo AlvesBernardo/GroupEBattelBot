@@ -306,6 +306,8 @@ void detectDistance() {
 
 }
 
+
+// funtion to make it turn 180 degrees
 void rotationL() {
   countL++;
 }

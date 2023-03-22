@@ -3,7 +3,6 @@
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
-//#include <Servo.h>
 #include<SoftwareSerial.h>
 
 //defining pins for distance sensor
@@ -17,6 +16,12 @@ const int motorPin2 = 10; //A2
 const int motorPin3 = 6; //B1
 const int motorPin4 = 5; //B2
 
+//rotation sensors i guess
+const int motorR1 = 3;
+const int motorR2 = 2;
+
+int countL = 0;
+int countR = 0;
 
 //line senor pin
 const int lineSenor1 = A6;
@@ -66,6 +71,10 @@ void setup() {
   pinMode (motorPin4, OUTPUT);
   pinMode(motorPin, OUTPUT);
   pinMode (motorPin3, OUTPUT);
+  pinMode(motorR1, INPUT);
+  pinMode(motorR2, INPUT);
+  attachInterrupt(digitalPinToInterrupt(3), rotationL, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(2), rotationR, CHANGE);
   Serial.begin(9600); // Starts the serial communication
 
 //==================[ Line sensor ]====================
@@ -109,7 +118,7 @@ void loop() {
     else if (analogRead(pinBlnWh[i]) < 750) {
       reading[i] = 0;
     }
-    showLineSensorReading();
+    // showLineSensorReading();
   }//the sensors reading are stored in previously empty array
   int positionRobot = conversion(reading);//conversts reading to position
  // 
@@ -134,7 +143,15 @@ void loop() {
   // Prints the distance on the Serial Monitor
   //Serial.print("Distance: ");
   //Serial.println(distance);
-
+  countL = 0;
+  if(countL > 20){
+    analogWrite(motorPin2, 0);
+    countL = 0;
+    delay(1000);
+  } else {
+    analogWrite(motorPin2, 150);
+  }
+  
 
 
 
@@ -146,6 +163,25 @@ void loop() {
 /*    =======================*/
 /*    ======[funtions] ========*/
 /*    =======================*/
+void rotationL() {
+  countL++;
+}
+
+void rotationR() {
+  countR++;
+}
+
+void rotateLeft(int cycle){
+  countL = 0;
+  if(countL > cycle){
+    analogWrite(motorPin2, 0);
+    countL = 0;
+    delay(1000);
+  } else {
+    analogWrite(motorPin2, 150);
+  }
+}
+
 
 void forward() {
   analogWrite(motorPin2, 150);

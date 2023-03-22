@@ -29,7 +29,7 @@ const int lineSenor7 = A5;//right
 const int lineSenor8 = A7;// left
 
 //left to right
-int pinBlnWh[] = {A7,A6,A0,A1,A2,A3,A4,A5}; //from left to right order
+int pinBlnWh[] = {A7, A6, A0, A1, A2, A3, A4, A5}; //from left to right order
 int posVal[] = { -4, -3, -2, -1, 1, 2, 3, 4}; //possible values
 int reading[8] = {};
 int positionRobot = 0;
@@ -60,7 +60,7 @@ int angle = 10;
 
 
 void setup() {
-//==================[ Motors ]====================
+  //==================[ Motors ]====================
   //motors declaration
   pinMode(motorPin2, OUTPUT);
   pinMode (motorPin4, OUTPUT);
@@ -68,7 +68,7 @@ void setup() {
   pinMode (motorPin3, OUTPUT);
   Serial.begin(9600); // Starts the serial communication
 
-//==================[ Line sensor ]====================
+  //==================[ Line sensor ]====================
   //declaring iuput for lineSenor
   pinMode(lineSenor1, INPUT);
   pinMode(lineSenor2, INPUT);
@@ -100,9 +100,9 @@ void setup() {
 void loop() {
 
 
- 
+
   detectDistance();
-  for (int i = 0; i <8; i++) {
+  for (int i = 0; i < 8; i++) {
     if (analogRead(pinBlnWh[i]) > 750) {
       reading[i] = 1;
     }
@@ -112,10 +112,10 @@ void loop() {
     showLineSensorReading();
   }//the sensors reading are stored in previously empty array
   int positionRobot = conversion(reading);//conversts reading to position
- // 
+  //
   moving(positionRobot, reading); //move
- 
- //showLineSensorReading();
+
+  //showLineSensorReading();
 
 
 
@@ -132,8 +132,9 @@ void loop() {
   // Calculating the distance
   distance = duration * 0.034 / 2;
   // Prints the distance on the Serial Monitor
-  //Serial.print("Distance: ");
-  //Serial.println(distance);
+  Serial.print("Distance: ");
+  Serial.println(distance);
+  Serial.println("-");
 
 
 
@@ -203,12 +204,20 @@ void showLineSensorReading() {
 
 int conversion(int reading[]) { //first of all it checks for outliers such as 10000000 and 00000001;
   int positionRobot = 0;
-  /*if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
+  if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
     positionRobot = -13;
     return positionRobot;
-  }*/
-//if it isnt an outlier it goes here
-  for (int i = 0; i < 7; i++) {
+  }
+  if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 1) {
+    positionRobot = 13;
+    return positionRobot;
+  }
+  if (reading[0] == 1 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
+    positionRobot = -13;
+    return positionRobot;
+  }
+  //if it isnt an outlier it goes here
+  for (int i = 0; i < 8; i++) {
     if (reading[i] == 1) {
       positionRobot = positionRobot + posVal[i]; //this array are all the values. If the reading is 1 it sums if it is 0, it does nothing that way even if it is 11110000 it will work
     }
@@ -218,29 +227,26 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
 
 
 void moving(int positionRobot, int reading[]) {
-
-  if (positionRobot == 2) {
+  Serial.println("-");
+  Serial.print(positionRobot);
+  if (positionRobot == 0) {
     analogWrite(motorPin2, basicSpeed);
     analogWrite(motorPin4, basicSpeed);
   }
-  /*
-      if (positionRobot == -3){
-      analogWrite(motorPin2, 50);
-      analogWrite(motorPin4, 0);
-        }
 
-      if(reading == -13){
-      analogWrite(motorPin2, 50);
-      analogWrite(motorPin4, 0);
-      }
+  if (positionRobot == -13) {
+    analogWrite(motorPin2, 50);
+    analogWrite(motorPin4, 0);
+  }
 
-      if(reading == -7){
-      analogWrite(motorPin2, 50 );
-      analogWrite(motorPin4, 0);
-      }
+  if (positionRobot == 13) {
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, 50);
+  }
 
 
-  */
+
+
 
 
 
@@ -272,7 +278,7 @@ void moving(int positionRobot, int reading[]) {
 
 void detectDistance() {
 
-  if (distance > 25) {
+  if (distance > 6) {
     //if distance above 10 neopixel off
     for (int i = 0; i < NUMPIXELS; i++) {
       pixels.setPixelColor(i, pixels.Color(137, 207, 240));
@@ -291,6 +297,18 @@ void detectDistance() {
     analogWrite(motorPin2, 0); //Right Motor forword Pin
     analogWrite(motorPin4, 0); //Left Motor forward Pin
     pixels.show();
+    /*  delay(300);
+      analogWrite(motorPin4, 100);
+      delay(300);
+      analogWrite(motorPin2, basicSpeed);
+      analogWrite(motorPin4, basicSpeed);
+      delay(800);
+      analogWrite(motorPin2, 100);
+      delay(450);
+      analogWrite(motorPin2, basicSpeed);
+      analogWrite(motorPin4, basicSpeed);
+      delay(800);
+    */
 
 
 
@@ -298,4 +316,10 @@ void detectDistance() {
 
 
 
+}
+void stop() {
+  analogWrite(motorPin, 0);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 0);
 }

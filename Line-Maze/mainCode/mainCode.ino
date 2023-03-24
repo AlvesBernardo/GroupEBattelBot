@@ -41,7 +41,7 @@ int positionRobot = 0;
 
 //speeds
 const int turningRatio = 35;
-const int basicSpeed = 130;
+const int basicSpeed = 170;
 const int minumumSpeed = 75;
 
 
@@ -124,7 +124,7 @@ void loop() {
  // 
   moving(positionRobot, reading); //move
  
- //showLineSensorReading();
+ showLineSensorReading();
 
 
 
@@ -141,8 +141,8 @@ void loop() {
   // Calculating the distance
   distance = duration * 0.034 / 2;
   // Prints the distance on the Serial Monitor
-  //Serial.print("Distance: ");
-  //Serial.println(distance);
+  Serial.print("Distance: ");
+  Serial.println(distance);
  
   
 
@@ -213,11 +213,30 @@ void showLineSensorReading() {
 }
 
 int conversion(int reading[]) { //first of all it checks for outliers such as 10000000 and 00000001;
+
+  
   int positionRobot = 0;
-  /*if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
+  if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
     positionRobot = -13;
     return positionRobot;
-  }*/
+  }
+  if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 1) {
+    positionRobot = 13;
+    return positionRobot;
+  }
+  if (reading[0] == 1 && reading[1] == 1 && reading[2] == 1 && reading[3] == 1 && reading[4] == 1 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
+    positionRobot = 20;
+    return positionRobot;
+  }
+  if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 1 && reading[4] == 1 && reading[5] == 1 && reading[6] == 1 && reading[7] == 1) {
+    positionRobot = 30;
+    return positionRobot;
+  }
+
+    if (reading[0] == 1 && reading[1] == 1 && reading[2] == 1 && reading[3] == 1 && reading[4] == 1 && reading[5] == 1 && reading[6] == 1 && reading[7] == 1) {
+    positionRobot = 50;
+    return positionRobot;
+  }
 //if it isnt an outlier it goes here
   for (int i = 0; i < 7; i++) {
     if (reading[i] == 1) {
@@ -229,11 +248,36 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
 
 
 void moving(int positionRobot, int reading[]) {
-
+  Serial.println("-");
+  Serial.print("Poition");
+  Serial.print(positionRobot);
+  Serial.println("-");
   if (positionRobot == 0) {
     analogWrite(motorPin2, basicSpeed);
     analogWrite(motorPin4, basicSpeed);
   }
+
+/*
+  if(positionRobot == 20){
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, basicSpeed);
+    delay(20);
+    }
+   if(positionRobot == 30){
+    analogWrite(motorPin2, basicSpeed);
+    analogWrite(motorPin4, 0);
+    delay(20);
+    }
+*/
+    if(positionRobot == 50){
+
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, 0);
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, basicSpeed);
+    delay(20);
+    Stop();
+    }
   /*
       if (positionRobot == -3){
       analogWrite(motorPin2, 50);
@@ -264,7 +308,7 @@ void moving(int positionRobot, int reading[]) {
       pixels.show();
     }
     //make it make a u turn
-  rotateLeft(105);
+  rotateLeft(150);
   }
 
 

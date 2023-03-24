@@ -17,6 +17,8 @@
 #define gripper_close_pulse  971 // 
 #define servoPulseRepeat 10 // number of pulse send to servo
 
+int length = 10;
+
 const int trunRatio = 35;
 const int baseSpeed = 250;
 
@@ -79,26 +81,11 @@ void setup() {
   pixels.show();
 }
 //=====================[ LOOP BEGINING ] =======================
-
- void servo(int pin, int length) {
-        digitalWrite(pin, HIGH);
-        delayMicroseconds(length);//in microseconds
-        digitalWrite(pin, LOW);
-        delay(20); 
-      }
-
-  void openGripper() {
-    servo(gripperPin, gripper_open_pulse);
-  }
-  
-  void closeGripper(){
-    servo(gripperPin, gripper_close_pulse);
-  }
   
 int sensRead[8];//empty array for reading results
 void loop() {
   if(isRaceStarted){
-    if(detectObject()){
+    if(detectObject()){//evasion of objects
           evade();    
     }
     else{
@@ -115,14 +102,17 @@ void loop() {
 
       if(isIntercection(sensRead)){
         curentIntercectionDuration++;
+        //checks for the intersections
       }
       else{
         curentIntercectionDuration = 0;
       }
-      if(curentIntercectionDuration>maxIntercectionDuration){
+      if(curentIntercectionDuration>maxIntercectionDuration){//it will not stop at small intersections, but wull at the massive black cube at the end
         stop();
+        raceEnd();
         while(true){
           delay(1);
+          //end of the race
         }
       }
       //Serial.println(curentIntercectionDuration);
@@ -130,9 +120,9 @@ void loop() {
       move(position, sensRead);//move
     }
   }
-  else{
+  else if(detectObject()){//start sequence of the race, executed once, but since it is movement, it is in loop
     startRace();
-    isRaceStarted=true;    
+    isRaceStarted=true;
   }
 
 }
@@ -328,4 +318,19 @@ bool isIntercection(int reading[]){
 }
 void raceEnd(){
   
+}
+
+void servo(int pin, int length) {
+  digitalWrite(pin, HIGH);
+  delayMicroseconds(length);//in microseconds
+  digitalWrite(pin, LOW);
+  delay(20); 
+}
+
+void openGripper(){
+  servo(gripperPin, gripper_open_pulse);
+}
+  
+void closeGripper(){
+  servo(gripperPin, gripper_close_pulse);
 }

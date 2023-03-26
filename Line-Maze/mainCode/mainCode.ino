@@ -39,6 +39,7 @@ int posVal[] = { -4, -3, -2, -1, 1, 2, 3, 4}; //possible values
 int reading[8] = {};
 int positionRobot = 0;
 int previousPosition = 0;
+int currentPosition=0;
 
 //speeds
 const int turningRatio = 35;
@@ -106,7 +107,6 @@ void setup() {
 
 
 void loop() {
-
 
 
   // detectDistance();
@@ -389,6 +389,10 @@ void openGripper(){
   }
  }
  
+//endOfRace
+void relayPin(){
+  }
+
 
 // funtion to make it turn 180 degrees
 void rotationL() {

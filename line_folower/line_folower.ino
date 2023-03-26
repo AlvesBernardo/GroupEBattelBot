@@ -7,16 +7,6 @@
 
 //==================[ DEFINITION OF PINS ]====================
 
-#define servoPin 8
-#define gripperPin 13
-#define servoMinPulse 500
-#define servoCenterPulse 1400 // 
-#define servoMaxPulse 2400 //in microseconds
-
-#define gripper_open_pulse 1600
-#define gripper_close_pulse  971 // 
-#define servoPulseRepeat 10 // number of pulse send to servo
-
 int length = 10;
 
 const int trunRatio = 35;
@@ -49,6 +39,8 @@ const int GRBevsasion[] = {0, 0, 255};
 const int trig = 4;
 const int echo = 2;
 
+const int gripperPin = 13;
+
 long duration;
 int distance;
 
@@ -71,6 +63,8 @@ void setup() {
   
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
+
+  pinMode(gripperPin, OUTPUT);
 
   pinMode(neoPin,OUTPUT);
   pixels.begin();
@@ -303,6 +297,8 @@ void startRace(){
   analogWrite(motorBPin1, baseSpeed);
   analogWrite(motorAPin2, baseSpeed);
   delay(950);
+  stop();
+  closeGripper();
   analogWrite(motorAPin1, 0);
   analogWrite(motorBPin2, baseSpeed);//left turn start could be calibrated more precise.
   analogWrite(motorAPin2, baseSpeed);
@@ -316,21 +312,28 @@ bool isIntercection(int reading[]){
   }
   return false;
 }
-void raceEnd(){
-  
-}
-
-void servo(int pin, int length) {
-  digitalWrite(pin, HIGH);
-  delayMicroseconds(length);//in microseconds
-  digitalWrite(pin, LOW);
-  delay(20); 
-}
 
 void openGripper(){
-  servo(gripperPin, gripper_open_pulse);
+  for(int i = 0; i<4; i++){
+    digitalWrite(gripperPin, HIGH);
+    delayMicroseconds(1700);//pulse duration in microseconds
+    digitalWrite(gripperPin, LOW);
+    delay(20);
+  }
 }
-  
+
 void closeGripper(){
-  servo(gripperPin, gripper_close_pulse);
+  for(int i = 0; i<4; i++){
+    digitalWrite(gripperPin, HIGH);
+    delayMicroseconds(1000);//pulse duration in microseconds
+    digitalWrite(gripperPin, LOW);
+    delay(20);
+  }
+}
+void raceEnd(){
+  openGripper();
+  analogWrite(motorBPin2, baseSpeed);
+  analogWrite(motorAPin1, baseSpeed);
+  delay(300);
+  stop();
 }

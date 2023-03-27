@@ -1,3 +1,7 @@
+// Warning! Achtung! Attention! Увага! 
+// Do not have anything connected to pin 0 or pin 1 when uploading the program!
+// Do not use pin 0 or pin 1 unless you disable serial communication
+
 // Neopixel library to simplify the use of Neopixel LEDs
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
@@ -8,10 +12,11 @@
 #include <Servo.h>
 
 /*
+ *
  * We are using preprocessor commands to disable certain functionality that could impact performance during the race
  * enable it back to ensure that the serial monitor prints logs
 */
-#define DEBUG
+#define ENABLE_SERIAL
 
 /*
  * PINS:
@@ -29,12 +34,6 @@ const int MotorFLPin = 3;                 // PWM left motor forward motion
 const int MotorBLPin = 11;                // PWM left motor backward motion
 const int MotorFRPin = 6;                 // PWM right motor forward motion
 const int MotorBRPin = 5;                 // PWM right motor backward motion
-
-// useful functions for maths
-bool approxComparison(double target, double value, double margin=0.05) {
-    return (target * (1-margin) > value && target * (1+margin) < value);
-}
-
 
 // neopixels setup and functions that control the lights
 const int NumberOfNeoPixels = 4;
@@ -77,7 +76,6 @@ void clearPixels() {
 }
 
 // colors constants
-const uint32_t blue_green = pixels.Color(200, 0, 50);
 const uint32_t green = pixels.Color(255, 0, 0);
 const uint32_t red = pixels.Color(0, 255, 0);
 const uint32_t blue = pixels.Color(0, 0, 255);
@@ -86,6 +84,7 @@ const uint32_t cyan = pixels.Color(255, 0, 255);
 const uint32_t magenta = pixels.Color(0, 255, 255);
 const uint32_t orange = pixels.Color(51, 255, 0);
 const uint32_t white = pixels.Color(255, 255, 255);
+const uint32_t aqua = pixels.Color(200, 0, 50);
 
 // Line sensor
 const int isDarkThreshold = 800;
@@ -98,7 +97,7 @@ void inline initLineSensor() {
         pinMode(sensorPin, INPUT);
     }
 }
-#ifdef DEBUG
+#ifdef ENABLE_SERIAL
 void logLineSensorReading() {
     Serial.print("Line Sensors (L->R): ");
     for (int sensorPin : lineSensor) {
@@ -117,7 +116,7 @@ int getLineSensorReading() {
             result += (-7 + i*2);
         }
     }
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     logLineSensorReading();
     Serial.print("Line Sensor Reading: ");
     Serial.println(result);
@@ -146,9 +145,9 @@ bool isAllDark() {
 //Distance Sensor
 class DistanceSensor {
     private:
-    int m_trigPin;
-    int m_echoPin;
-    char m_pos; // 'L', 'F', 'R'
+    int m_trigPin; // pin responsible for activating the sensor
+    int m_echoPin; // pin responsible for reading sensor's output
+    char m_pos;    // this variable is here only for debugging purposes, 
     public:
     DistanceSensor(char pos, int trigPin, int echoPin) {
         m_trigPin = trigPin;
@@ -157,6 +156,7 @@ class DistanceSensor {
         pinMode(m_trigPin, OUTPUT);
         pinMode(m_echoPin, INPUT);
     }
+    // no getters/setters, because the private fields inside the class should not be accessed/modified outside of the class
     double getDistance() {
         // clean up the pulse
         digitalWrite(m_trigPin, LOW);
@@ -167,7 +167,7 @@ class DistanceSensor {
         delayMicroseconds(2);
         double duration = pulseIn(m_echoPin, HIGH);
         double distance = (duration/2) / 29.1;
-        #ifdef DEBUG
+        #ifdef ENABLE_SERIAL
         Serial.print("Distance Sensor (");
         Serial.print(m_pos);
         Serial.print(") Reading (cm): ");
@@ -183,7 +183,7 @@ DistanceSensor rightDistanceSensor = DistanceSensor('R', SensorRightTrigPin, Sen
 
 // Motor functions
 void moveForward(int speed_left=255, int speed_right=255) {
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     Serial.print("forward()\n");
     #endif
     analogWrite(MotorFLPin, speed_left);
@@ -192,7 +192,7 @@ void moveForward(int speed_left=255, int speed_right=255) {
     analogWrite(MotorBRPin, 0);
 }
 void turnLeft(int speed_left=255, int speed_right=255) {
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     Serial.print("turnLeft()\n");
     #endif
     analogWrite(MotorFLPin, 0);
@@ -201,7 +201,7 @@ void turnLeft(int speed_left=255, int speed_right=255) {
     analogWrite(MotorBRPin, 0);
 } 
 void turnRight(int speed_left=255, int speed_right=255) {
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     Serial.print("turnRight()\n");
     #endif
     analogWrite(MotorFLPin, speed_left);
@@ -210,16 +210,35 @@ void turnRight(int speed_left=255, int speed_right=255) {
     analogWrite(MotorBRPin, speed_right);
 }
 void moveBackward(int speed_left=255, int speed_right=255) {
-    #ifdef DEBUG
-    Serial.print("backward()\n");
+    #ifdef ENABLE_SERIAL
+    Serial.print("moveBackward()\n");
     #endif
     analogWrite(MotorBLPin, speed_left);
     analogWrite(MotorBRPin, speed_right);
     analogWrite(MotorFLPin, 0);
     analogWrite(MotorFRPin, 0);
 }
+void moveForwardLeft(int speed_move=150, int speed_turn=255) {
+    #ifdef ENABLE_SERIAL
+    Serial.println("moveForwardLeft()");
+    #endif
+    analogWrite(MotorFLPin, speed_move);
+    analogWrite(MotorFRPin, speed_turn);
+    analogWrite(MotorBLPin, 0);
+    analogWrite(MotorBRPin, 0);
+}
+void moveForwardRight(int speed_move=200, int speed_turn=255) {
+    #ifdef ENABLE_SERIAL
+    Serial.println("moveForwardRight()");
+    #endif
+    analogWrite(MotorFLPin, speed_turn);
+    analogWrite(MotorFRPin, speed_move);
+    analogWrite(MotorBLPin, 0);
+    analogWrite(MotorBRPin, 0);
+}
+
 void halt() {
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     Serial.print("halt()\n");
     #endif
     analogWrite(MotorBLPin, 0);
@@ -235,14 +254,14 @@ bool g_isGripperOpen = true;
 void openGripper() {
     gripper.write(120);
     g_isGripperOpen = true;
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     Serial.print("openGripper()\n");
     #endif
 }
 void closeGripper() {
     gripper.write(50);
     g_isGripperOpen = false;
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     Serial.print("closeGripper()\n");
     #endif
 }
@@ -275,14 +294,12 @@ void followLine() {
 }
 
 
-const int distanceThreshold = 15;
 const int dirLeft = 5;
 const int dirStraight = 0;
 const int dirRight = -5;
 
-const double errorMargin = 0.05;
-
-void measuredTurn(int turnDirection, double errorMargin=errorMargin) {
+/*
+void measuredTurn(int turnDirection, double errorMargin=ErrorMargin) {
     double targetDistance;
     halt();
     clearPixels();
@@ -303,7 +320,7 @@ void measuredTurn(int turnDirection, double errorMargin=errorMargin) {
     do {
         currentDistance = frontDistanceSensor.getDistance();
     } while (currentDistance < targetDistance * (1-errorMargin) || currentDistance > targetDistance * (1 + errorMargin));
-}
+}*/
 /*
 void turnToTarget(int dir, double targetDistance) {
     targetDistance *= 0.95;
@@ -339,8 +356,18 @@ void turn90(int dir) {
             turnRight();
             break;
     }
-    delay(700);
+    delay(600);
     halt();
+}
+void rotate() {
+    double initFrontDistance = frontDistanceSensor.getDistance();
+    double initLeftDistance = leftDistanceSensor.getDistance();
+    double initRightDistance = rightDistanceSensor.getDistance();
+    int rotationDirection = dirLeft;
+    if (initLeftDistance < initRightDistance) {
+        rotationDirection = dirRight;
+    }
+    
 }
 
 
@@ -351,12 +378,9 @@ bool g_lookForExitMode = false;
 bool g_receivedActivationSignal = true;
 
 void setup() {
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     Serial.begin(9600);
     Serial.println("Setup()");
-    Serial.println(0.1 == 0.1);
-    Serial.println(0.1 + 0.1 + 0.1 == 0.3);
-    Serial.println(approxComparison(0.1 + 0.1 + 0.1, 0.3));
     #endif
     pinMode(NeoPixelPin, OUTPUT);
     pinMode(GripperPin, OUTPUT);
@@ -370,26 +394,157 @@ void setup() {
     while (!g_receivedActivationSignal) {
     }
     closeGripper();
-    turn90(dirLeft);
-    delay(500);
-    turn90(dirRight);
+    moveForwardLeft();
+    delay(1000);
+    halt();
+}
+
+int g_counter = 0;
+const int resetCounterAt = 10;
+// records
+double prevRelevantLeft = 9999;
+double prevRelevantFront = 9999;
+double prevRelevantRight = 9999;
+//flags
+
+const double SafeFrontDistance = 15;
+const double SafeSideDistance = 5;
+const double RobotWidth = 9.5;
+const double MazeWidth = 30;
+const double ErrorMargin = 0.05;
+
+bool isWithinPercRange(double ratio, double errMargin = ErrorMargin) {
+    return (ratio >= (1-errMargin) && ratio <= (1+errMargin));
+}
+void skipLoop(double leftDistance, double frontDistance, double rightDistance) {
+    if (g_counter == 0) {
+        prevRelevantLeft = leftDistance;
+        prevRelevantFront = frontDistance;
+        prevRelevantRight = rightDistance;
+    }
+    if (g_counter != resetCounterAt) {
+        g_counter++;
+    }
+    else {
+        g_counter = 0;
+    }
 }
 
 void loop() {
     double distanceLeft = leftDistanceSensor.getDistance();
     double distanceFront = frontDistanceSensor.getDistance();
     double distanceRight = rightDistanceSensor.getDistance();
-    if (distanceLeft < 20) {
-        leftPixels(red);
+
+    // put your code here
+
+    double measuredWidth = distanceLeft + RobotWidth + distanceRight;
+    double widthDiff = measuredWidth / MazeWidth;
+
+    double ratioLeftRight = distanceLeft / distanceRight;
+    #ifdef ENABLE_SERIAL
+        Serial.print("Total width: ");
+        Serial.println(measuredWidth);
+        Serial.print("L/R ratio: ");
+        Serial.println(widthDiff);
+    #endif
+    // if left distance + right distance + robot distance are approx equal to the maze width
+    // then the robot is at ~90 angle towards the walls
+    if (isWithinPercRange(widthDiff)) {
+        // if left sensor reading + right distance + robot width are approx equal to maze width
+        // then the robot should be at ~90 degree angle to the walls
+
+        if (isWithinPercRange(ratioLeftRight)) {
+            // the robot is almost equidistant from the walls
+            if (distanceFront < SafeFrontDistance) {
+                allPixels(red);
+                halt();
+                // something to turn around by 180 degrees
+                bool canEndLoop = false;
+                
+            } else {
+                frontPixels(aqua);
+                moveForward();
+            }
+        }
+        else {
+            if (distanceLeft > distanceRight) {
+                // if we are too close the right wall, start moving towards the funny
+                leftPixels(yellow);
+                moveForwardLeft();
+            }
+            else {
+                rightPixels(yellow);
+                moveForwardRight();
+            }
+        }
     }
-    if (distanceFront < 20) {
-        frontPixels(magenta);
+    else {
+        // extreme angle or it sees an opening
     }
-    if (distanceRight < 20) {
-       rightPixels(red);
+
+    // handling the prevRelevant vars
+    skipLoop(distanceLeft, distanceFront, distanceRight);
+    
+    /*
+     * if there is an opening to the left, remember the opening
+     * if there is an opening to the right, turn right (remember turning)
+     * if there is nothing in front, move forward
+     * else: turn around
+    */    
+    /*
+    if (g_hasTurnedAround) {
+        if (distanceRight > 15) {
+            if (g_rememberLeftOpening) {
+                g_ignoreRightTurn = true;
+                g_rememberLeftOpening = false;
+            }
+            if (g_ignoreRightTurn) {
+                clearPixels();
+                frontPixels(cyan);
+                moveForward();
+            }
+            else {
+                turn90(dirRight);
+                g_hasTurnedAround = false;
+                clearPixels();
+                rightPixels(green);
+            }
+            return;
+        }
+        rightPixels(green);
+        moveForward();
     }
-    delay(500);
-    clearPixels();
+    else {
+        if (distanceLeft > 15 && (distanceRight + 10.5 + distanceLeft > 30)) {
+            leftPixels(cyan);
+            g_rememberLeftOpening = true;
+        }
+        if (distanceRight > 15) {
+            moveForward();
+            clearPixels();
+            rightPixels(orange);
+            delay(1500);
+            turn90(dirRight);
+            if (g_rememberRightTurn) {
+                g_rememberLeftOpening = false;
+            } else {
+                g_rememberRightTurn = true;
+            }
+            return;
+        }
+        if (distanceFront > 15) {
+            frontPixels(green);
+            moveForward();
+        }
+        else {
+            // very smart
+            allPixels(green);
+            turn90(dirRight);
+            turn90(dirRight);
+            g_hasTurnedAround = true;
+        }
+    }
+    */
     /*
     double prevDistance = 200;
     while (isAllLight()) {
@@ -447,7 +602,7 @@ void loop() {
         prevDistance = curDistance;
     }
     halt();
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     logLineSensorReading();
     #endif
     allPixels(cyan);
@@ -494,7 +649,7 @@ void loop() {
             moveForward();
         }
     }
-    #ifdef DEBUG
+    #ifdef ENABLE_SERIAL
     logLineSensorReading();
     #endif
     */

@@ -23,8 +23,8 @@ const int motorR2 = 2;
 //gripper
 int gripperPin = 13;
 
-int countL = 0;
-int countR = 0;
+volatile int countL = 0;
+volatile int countR = 0;
 
 //line senor pin
 const int lineSenor1 = A6;
@@ -121,7 +121,7 @@ void loop() {
       if (analogRead(pinBlnWh[i]) > 750) {
         reading[i] = 1;
       }
-      else if (analogRead(pinBlnWh[i]) < 750) {
+      else if (analogRead(pinBlnWh[i]) < 650) {
         reading[i] = 0;
       }
       // showLineSensorReading();
@@ -259,26 +259,37 @@ void moving(int positionRobot, int reading[]) {
   Serial.print(positionRobot);
   Serial.println("");
 
+  if (positionRobot == 50 || previousPosition == 50) {
+   
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, 0);
+    delay(80);
+    analogWrite(motorPin2, 80);
+    analogWrite(motorPin4, 160);
+
+    Serial.println("Intersection");
+
+  }
   if (positionRobot == 0 || previousPosition == 0) {
     analogWrite(motorPin2, basicLeft);
     analogWrite(motorPin4, basicRight);
     Serial.println("Straight");
   }
 
-  if (positionRobot == 50 || previousPosition == 50) {
-    analogWrite(motorPin2, 50);
-    analogWrite(motorPin4, 160);
-    Serial.println("Intersection");
-
-  }
-  if (positionRobot == 30 || previousPosition == 30) {
-    analogWrite(motorPin2, 150);
+  if (positionRobot == 30 || previousPosition == 30 ) {
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, 0);
+    delay(100);
+    analogWrite(motorPin2, 180);
     analogWrite(motorPin4, 80);
     Serial.println("right");
   }
-  if (positionRobot == 20 || previousPosition == 20) {
-    analogWrite(motorPin2, 150);
-    analogWrite(motorPin4, 50);
+  if (positionRobot == 20 || previousPosition == 20 ) {
+    analogWrite(motorPin2, 0);
+    analogWrite(motorPin4, 0);
+    delay(100);
+    analogWrite(motorPin2, 80);
+    analogWrite(motorPin4, 180);
     Serial.println("turn left");
   }
 
@@ -292,21 +303,20 @@ void moving(int positionRobot, int reading[]) {
     analogWrite(motorPin4, 80);
     Serial.println("TURN RIGHT");
   }
-  
-/*
 
-  //if white so for 180 degree turn
-  if (positionRobot == -13) {
-    analogWrite(motorPin, basicLeft);
-    analogWrite(motorPin3, basicRight);
-    for (int i = 0; i < NUMPIXELS; i++) {
-      pixels.setPixelColor(i, pixels.Color(0, 0, 255));
-      pixels.show();
+  
+
+    //if white go for 180 degree turn
+    if (positionRobot == -13 && previousPosition != 50  && positionRobot != 0 ) {
+      for (int i = 0; i < NUMPIXELS; i++) {
+        pixels.setPixelColor(i, pixels.Color(0, 0, 255));
+        pixels.show();
+      }
+      //make it make a u turn
+           testRotation();
+
     }
-    //make it make a u turn
-    rotateLeft(200);
-  }
-*/
+  
 }
 
 
@@ -325,9 +335,6 @@ void detectDistance() {
       pixels.setPixelColor(i, pixels.Color(137, 207, 240));
       pixels.show();
     }
-
-
-
   } else {
     //distance less then 10 neopixel on
 
@@ -336,53 +343,12 @@ void detectDistance() {
     pixels.setPixelColor(1, pixels.Color(137, 207, 240));
     pixels.setPixelColor(2, pixels.Color(137, 207, 240));
     pixels.show();
-
-
-
   }
-
-
-
 }
 
 
 //posible start of Race needs to be checked out.
-void detectRellayOfPin() {
-  //go pick up pin and start the race
-  if (distanceToNextRobot >= 25 || distanceToNextRobot <= 35) {
-    forward();
-    int countLines = 0;
-    if (positionRobot = 50) {
-      forward();
-      countLines += 1;
-    }
 
-    if (countLines == 3) {
-      delay(200);
-      closeGripper();
-    }
-  }
-
-}
-
-
-void openGripper() {
-  for (int i = 0; i < 4; i++) {
-    digitalWrite(gripperPin, HIGH);
-    delayMicroseconds(1700);//pulse duration in microseconds
-    digitalWrite(gripperPin, LOW);
-    delay(20);
-  }
-}
-
-void closeGripper() {
-  for (int i = 0; i < 4; i++) {
-    digitalWrite(gripperPin, HIGH);
-    delayMicroseconds(1000);//pulse duration in microseconds
-    digitalWrite(gripperPin, LOW);
-    delay(20);
-  }
-}
 
 //endOfRace
 void relayPin() {
@@ -414,10 +380,18 @@ void rotateLeft(int cycle) {
     analogWrite(motorPin3, 0);
     countL = 0;
     delay(800);
-    
+
 
   }
 }
+
+void testRotation(){
+  analogWrite(motorPin2, HIGH);
+  analogWrite(motorPin3, HIGH);
+  analogWrite(motorPin2, 150);
+  analogWrite(motorPin4, 0);
+  analogWrite(motorPin, 0);
+  analogWrite(motorPin3, 190);}
 
 void startRace() {
   analogWrite(motorPin2, basicLeft);
@@ -432,5 +406,52 @@ void startRace() {
   delay(800);
   stopRobot();
   hasRacesStarted = true;
-
 }
+//funtion for the ending of the race
+void endRace() {
+  openGripper();
+  analogWrite(motorPin, basicLeft);
+  analogWrite(motorPin3, basicRight);
+  delay(300);
+  stopRobot();
+}
+
+
+void openGripper() {
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(gripperPin, HIGH);
+    delayMicroseconds(1700);//pulse duration in microseconds
+    digitalWrite(gripperPin, LOW);
+    delay(20);
+  }
+}
+
+void closeGripper() {
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(gripperPin, HIGH);
+    delayMicroseconds(1000);//pulse duration in microseconds
+    digitalWrite(gripperPin, LOW);
+    delay(20);
+  }
+}
+
+/*
+void detectRobotCatchPin(){
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(5);
+  //max 200cm. if returns more, it detected nothing.
+  digitalWrite(trigPin, LOW);
+
+
+  duration = pulseIn(echo, HIGH);
+  distance = duration*0.0344/2;
+  if(distance<35){
+    return true;
+  }
+  return false;
+  
+  
+  }
+  */ 

@@ -266,21 +266,19 @@ void moving(int positionRobot, int reading[]) {
   }
 
   if (positionRobot == 50 || previousPosition == 50) {
-    analogWrite(motorPin2, basicLeft);
-    analogWrite(motorPin4, basicRight);
-
-    analogWrite(motorPin, 50);
-    analogWrite(motorPin4, 190);
+    analogWrite(motorPin2, 50);
+    analogWrite(motorPin4, 160);
     Serial.println("Intersection");
 
   }
   if (positionRobot == 30 || previousPosition == 30) {
-    stopRobot();
+    analogWrite(motorPin2, 150);
+    analogWrite(motorPin4, 80);
     Serial.println("right");
   }
   if (positionRobot == 20 || previousPosition == 20) {
-    stopRobot();
-
+    analogWrite(motorPin2, 150);
+    analogWrite(motorPin4, 50);
     Serial.println("turn left");
   }
 
@@ -294,10 +292,11 @@ void moving(int positionRobot, int reading[]) {
     analogWrite(motorPin4, 80);
     Serial.println("TURN RIGHT");
   }
-
+  
+/*
 
   //if white so for 180 degree turn
-  if (positionRobot == -13 && previousPosition == -13) {
+  if (positionRobot == -13) {
     analogWrite(motorPin, basicLeft);
     analogWrite(motorPin3, basicRight);
     for (int i = 0; i < NUMPIXELS; i++) {
@@ -307,7 +306,7 @@ void moving(int positionRobot, int reading[]) {
     //make it make a u turn
     rotateLeft(200);
   }
-
+*/
 }
 
 
@@ -401,9 +400,7 @@ void rotationR() {
 
 void rotateLeft(int cycle) {
   if (countL < cycle) {
-    analogWrite(motorPin2, basicLeft);
-    analogWrite(motorPin4, basicRight);
-    delay(1350);
+
     analogWrite(motorPin2, 150);
     analogWrite(motorPin4, 0);
     analogWrite(motorPin, 0);

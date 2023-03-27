@@ -50,9 +50,7 @@ bool isRaceStarted = false;//switchable for testing
 void setup() {
   Serial.begin(9600);
   
-  pinMode(servoPin, OUTPUT);
   pinMode(gripperPin, OUTPUT);
-  digitalWrite(servoPin, LOW);
   
   pinMode(pinArr, INPUT);
 
@@ -75,6 +73,10 @@ void setup() {
   pixels.show();
 }
 //=====================[ LOOP BEGINING ] =======================
+
+
+
+
   
 int sensRead[8];//empty array for reading results
 void loop() {
@@ -114,7 +116,7 @@ void loop() {
       move(position, sensRead);//move
     }
   }
-  else if(detectObject()){//start sequence of the race, executed once, but since it is movement, it is in loop
+  else if(detectRobot()){//start sequence of the race, executed once, but since it is movement, it is in loop
     startRace();
     isRaceStarted=true;
   }
@@ -289,7 +291,6 @@ void evade(){
     analogWrite(motorBPin1, baseSpeed);
     analogWrite(motorAPin2, baseSpeed);
     delay(800);
-    stop();
   }
 }
 
@@ -314,7 +315,7 @@ bool isIntercection(int reading[]){
 }
 
 void openGripper(){
-  for(int i = 0; i<4; i++){
+  for(int i = 0; i<10; i++){
     digitalWrite(gripperPin, HIGH);
     delayMicroseconds(1700);//pulse duration in microseconds
     digitalWrite(gripperPin, LOW);
@@ -323,14 +324,34 @@ void openGripper(){
 }
 
 void closeGripper(){
-  for(int i = 0; i<4; i++){
+  for(int i = 0; i < 10; i++){
     digitalWrite(gripperPin, HIGH);
     delayMicroseconds(1000);//pulse duration in microseconds
     digitalWrite(gripperPin, LOW);
     delay(20);
   }
 }
+
+bool detectRobot(){
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(5);
+  //max 200cm. if returns more, it detected nothing.
+  digitalWrite(trig, LOW);
+
+
+  duration = pulseIn(echo, HIGH);
+  distance = duration*0.0344/2;
+  if(distance<35){
+    return true;
+  }
+  return false;
+}
 void raceEnd(){
+  analogWrite(motorBPin2, baseSpeed);
+  analogWrite(motorAPin1, baseSpeed);
+  delay(100);
   openGripper();
   analogWrite(motorBPin2, baseSpeed);
   analogWrite(motorAPin1, baseSpeed);

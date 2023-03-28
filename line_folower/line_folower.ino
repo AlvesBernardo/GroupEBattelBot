@@ -117,6 +117,7 @@ void loop() {
     }
   }
   else if(detectRobot()){//start sequence of the race, executed once, but since it is movement, it is in loop
+    delay(300);
     startRace();
     isRaceStarted=true;
   }

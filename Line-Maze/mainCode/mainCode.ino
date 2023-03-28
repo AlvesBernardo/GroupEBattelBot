@@ -21,7 +21,7 @@ const int motorR1 = 3;
 const int motorR2 = 2;
 
 //gripper
-int gripperPin = 13;
+int gripperPin = 8;
 
 //is intersectionDone
 boolean isIttIntersection = false;
@@ -106,14 +106,15 @@ void setup() {
   pixels.show(); // Initialize all pixels to 'off'
 
 
-  //==================[ bluetoth ]====================
+  //==================[ gripper ]====================
+  openGripper(); 
 
 
-
-}
+} 
 
 
 void loop() {
+     
   if (hasRacesStarted == false) {
     startRace();
   } else {
@@ -245,8 +246,7 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
   if (reading[0] == 1 && reading[1] == 1 && reading[2] == 1 && reading[3] == 1 && reading[4] == 1 && reading[5] == 1 && reading[6] == 1 && reading[7] == 1) {
     positionRobot = 50;
     return positionRobot;
-    isIttIntersection = true;
-      rotateIntersection(70);
+   
   }
   //if it isnt an outlier it goes here
   for (int i = 0; i < 7; i++) {
@@ -261,44 +261,70 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
 void moving(int positionRobot, int reading[]) {
   Serial.println("-");
   Serial.print("Poition");
-  Serial.print(isIttIntersection);
+  Serial.print(positionRobot);
   Serial.println("");
-
-  if (positionRobot == 50 || previousPosition == 50) {
-     rotateIntersection(70);
-    
-    Serial.println("Intersection");
-
-  }
-
-      if (positionRobot == 0 || previousPosition == 0) {
+        
+     if (positionRobot == 0 || previousPosition == 0) {
+      analogWrite(motorPin2, HIGH);
+      analogWrite(motorPin4, HIGH);
       analogWrite(motorPin2, basicLeft);
       analogWrite(motorPin4, basicRight);
       Serial.println("Straight");
     }
 
 
-  
+  if (positionRobot == 50 || previousPosition == 50) {
+      analogWrite(motorPin2, basicLeft);
+      analogWrite(motorPin4, basicRight);
+      delay(55);
+       rotateIntersection(70);
+              Serial.println("Intersection");
+      // somthing has to be done here for the ending of the race
+     /* if(positionRobot == 50){
+       // openGripper();
+         analogWrite(motorPin2, basicLeft);
+         analogWrite(motorPin4, basicRight);
+         delay(55);
+          analogWrite(motorPin, basicLeft);
+         analogWrite(motorPin3, basicRight);
+         delay(55);
+         exit(0);
+        }else if (positionRobot == -13){
+              rotateIntersection(70);
+              Serial.println("Intersection");
+          }
+          */
+ 
+
+  }
+
     if (positionRobot == 30 || previousPosition == 30 ) {
+       analogWrite(motorPin2, HIGH);
+      analogWrite(motorPin4, HIGH);
       analogWrite(motorPin2, 180);
       analogWrite(motorPin4, 80);
       Serial.println("right");
     }
     if (positionRobot == 20 || previousPosition == 20 ) {
-  
+     analogWrite(motorPin2, HIGH);
+      analogWrite(motorPin4, HIGH);
       analogWrite(motorPin2, 80);
       analogWrite(motorPin4, 180);
       Serial.println("turn left");
     }
   
     if (positionRobot >= -7 && positionRobot < 0 ) { //TURN LEFT
-      analogWrite(motorPin2, 80);//left weel
-      analogWrite(motorPin4, 150);//right weel
+        analogWrite(motorPin2, HIGH);
+      analogWrite(motorPin4, HIGH);
+      analogWrite(motorPin2, 180);//left weel
+      analogWrite(motorPin4, 120);//right weel
       Serial.println("TURN LEFT");
     }
     if (positionRobot <= 7 && positionRobot > 0 ) {//TURN RIGHT
-      analogWrite(motorPin2, 150);
-      analogWrite(motorPin4, 80);
+       analogWrite(motorPin2, HIGH);
+      analogWrite(motorPin4, HIGH);
+      analogWrite(motorPin2, 120);
+      analogWrite(motorPin4, 180);
       Serial.println("TURN RIGHT");
     }
   
@@ -366,12 +392,12 @@ void rotationR() {
 
 void rotateIntersection(int cycle){
     if (countL < cycle) {
+    analogWrite(motorPin, HIGH);
     analogWrite(motorPin4, HIGH);
-    analogWrite(motorPin3, HIGH);
     analogWrite(motorPin2, 0);
     analogWrite(motorPin4, 150);
-    analogWrite(motorPin, 0);
-    analogWrite(motorPin3, 190);
+    analogWrite(motorPin, 150);
+    analogWrite(motorPin3, 0);
     countL++;
    
      } else {
@@ -418,12 +444,14 @@ void testRotation(){
   analogWrite(motorPin3, 190);}
 
 void startRace() {
+  
   analogWrite(motorPin2, basicLeft);
   analogWrite(motorPin4, basicRight);
   delay(1350);
   stopRobot();
-  closeGripper();
   analogWrite(motorPin2, 0);
+  delay(150);
+  closeGripper();
   analogWrite(motorPin4, basicRight);//left turn start could be calibrated more precise.
   analogWrite(motorPin4, basicRight);
   analogWrite(motorPin2, 0);

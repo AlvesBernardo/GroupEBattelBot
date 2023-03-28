@@ -313,7 +313,7 @@ void moving(int positionRobot, int reading[]) {
         pixels.show();
       }
       //make it make a u turn
-           testRotation();
+          rotateLeft(180);
 
     }
   
@@ -366,11 +366,12 @@ void rotationR() {
 
 void rotateLeft(int cycle) {
   if (countL < cycle) {
-
+    analogWrite(motorPin2, HIGH);
+    analogWrite(motorPin3, HIGH);
     analogWrite(motorPin2, 150);
     analogWrite(motorPin4, 0);
     analogWrite(motorPin, 0);
-    analogWrite(motorPin3, 0);
+    analogWrite(motorPin3, 190);
     countL++;
 
   } else {

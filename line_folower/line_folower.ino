@@ -344,7 +344,7 @@ bool detectRobot(){
 
   duration = pulseIn(echo, HIGH);
   distance = duration*0.0344/2;
-  if(distance<35){
+  if(distance<25){
     return true;
   }
   return false;

@@ -285,7 +285,7 @@ void evade(){
   delay(800);
   stop();
   analogWrite(motorAPin2, baseSpeed);
-  delay(500);
+  delay(550);
   stop();
   analogWrite(motorBPin1, baseSpeed);
   analogWrite(motorAPin2, baseSpeed);
@@ -315,7 +315,7 @@ bool isIntercection(int reading[]){
   if(reading[0]==1 && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==0 && reading[7]==0){//2 sensors not black
     return true;
   }
-  if(reading[0]==o && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){//1 sensor not black fromoposite side
+  if(reading[0]==0 && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){//1 sensor not black fromoposite side
     return true;
   }
   if(reading[0]==0 && reading[1]==0 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){//2 sensors not black from the opposite side

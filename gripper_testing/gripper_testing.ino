@@ -12,7 +12,7 @@ void loop() {
 }
 
 void openGripper(){
-  for(int i = 0; i<4; i++){
+  for(int i = 0; i<10; i++){
     digitalWrite(gripperPin, HIGH);
     delayMicroseconds(1700);//pulse duration in microseconds
     digitalWrite(gripperPin, LOW);
@@ -21,7 +21,7 @@ void openGripper(){
 }
 
 void closeGripper(){
-  for(int i = 0; i<4; i++){
+  for(int i = 0; i<10; i++){
     digitalWrite(gripperPin, HIGH);
     delayMicroseconds(1000);//pulse duration in microseconds
     digitalWrite(gripperPin, LOW);

@@ -117,7 +117,6 @@ void loop() {
     }
   }
   else if(detectRobot()){//start sequence of the race, executed once, but since it is movement, it is in loop
-    delay(300);
     startRace();
     isRaceStarted=true;
   }
@@ -271,28 +270,26 @@ bool detectObject(){
 }
 
 void evade(){
-  if(detectObject()){
-    stop();
+  stop();
 
-    pixels.setPixelColor(0, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));//
-    pixels.setPixelColor(1, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));
-    pixels.setPixelColor(2, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));
-    pixels.setPixelColor(3, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));//
-    pixels.show();
-    
-    analogWrite(motorBPin1, baseSpeed);
-    delay(300);
-    analogWrite(motorBPin1, baseSpeed);
-    analogWrite(motorAPin2, baseSpeed);
-    delay(800);
-    stop();
-    analogWrite(motorAPin2, baseSpeed);
-    delay(450);
-    stop();
-    analogWrite(motorBPin1, baseSpeed);
-    analogWrite(motorAPin2, baseSpeed);
-    delay(800);
-  }
+  pixels.setPixelColor(0, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));//
+  pixels.setPixelColor(1, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));
+  pixels.setPixelColor(2, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));
+  pixels.setPixelColor(3, pixels.Color(GRBevsasion[0], GRBevsasion[1], GRBevsasion[2]));//
+  pixels.show();
+  
+  analogWrite(motorBPin1, baseSpeed);
+  delay(450);
+  analogWrite(motorBPin1, baseSpeed);
+  analogWrite(motorAPin2, baseSpeed);
+  delay(800);
+  stop();
+  analogWrite(motorAPin2, baseSpeed);
+  delay(500);
+  stop();
+  analogWrite(motorBPin1, baseSpeed);
+  analogWrite(motorAPin2, baseSpeed);
+  delay(800);
 }
 
 void startRace(){
@@ -309,7 +306,19 @@ void startRace(){
   stop();
 }
 bool isIntercection(int reading[]){
-  if(reading[0]==1 && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){
+  if(reading[0]==1 && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){//all snesors black
+    return true;
+  }
+  if(reading[0]==1 && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==0){//1 sensor not black
+    return true;
+  }
+  if(reading[0]==1 && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==0 && reading[7]==0){//2 sensors not black
+    return true;
+  }
+  if(reading[0]==o && reading[1]==1 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){//1 sensor not black fromoposite side
+    return true;
+  }
+  if(reading[0]==0 && reading[1]==0 && reading[2]==1 && reading[3]==1 && reading[4]==1 && reading[5]==1 && reading[6]==1 && reading[7]==1){//2 sensors not black from the opposite side
     return true;
   }
   return false;
@@ -349,6 +358,7 @@ bool detectRobot(){
   }
   return false;
 }
+
 void raceEnd(){
   analogWrite(motorBPin2, baseSpeed);
   analogWrite(motorAPin1, baseSpeed);

@@ -72,12 +72,9 @@ void setup() {
   }
   pixels.show();
 }
+
 //=====================[ LOOP BEGINING ] =======================
 
-
-
-
-  
 int sensRead[8];//empty array for reading results
 void loop() {
   if(isRaceStarted){

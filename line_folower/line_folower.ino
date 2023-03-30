@@ -282,14 +282,14 @@ void evade(){
   delay(450);
   analogWrite(motorBPin1, baseSpeed);
   analogWrite(motorAPin2, baseSpeed);
-  delay(800);
+  delay(650);
   stop();
   analogWrite(motorAPin2, baseSpeed);
-  delay(550);
+  delay(700);
   stop();
   analogWrite(motorBPin1, baseSpeed);
   analogWrite(motorAPin2, baseSpeed);
-  delay(800);
+  delay(600);
 }
 
 void startRace(){

@@ -49,8 +49,8 @@ int currentPosition = 0;
 
 //speeds
 const int turningRatio = 35;
-const int basicRight = 180;
-const int basicLeft = 150;
+const int basicRight = 280;
+const int basicLeft = 165;
 const int minumumSpeed = 75;
 
 
@@ -60,6 +60,9 @@ int distance;
 int distanceToNextRobot;
 int neoPIN = 7; //NEO pixel datapin
 int NUMPIXELS = 4;
+
+
+boolean test = false;
 
 
 Adafruit_NeoPixel pixels(NUMPIXELS, neoPIN, NEO_GRB + NEO_KHZ800);
@@ -245,34 +248,56 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
 
 void moving(int positionRobot, int reading[]) {
   //showLineSensorReading();
-  isIntersection = false;
+
   if (reading[3] == 1 && reading[4]   ==  1) {
     forward();
 
   }
-
-  if ( positionRobot == 50) {
-    analogWrite(motorPin2, basicLeft);//left weel
-    analogWrite(motorPin4, basicRight);//right weel
-    isIntersection = true;
-    intersectionLeftTurning(38);
-
-  }
-  if (reading[0] == 0 && reading[1] ==  0  && reading[2] == 0  && reading[3] == 1 && reading[4] ==  1 && reading[5] ==  1  && reading[6] == 1  && reading[7] == 1) {
-    intersectionLeftTurning(32);
-  }
-
   /*
-    //make 180 turn
-    if ( isTurningRight == false) {
-      if (reading[0] == 0 && reading[1]   ==  0 && reading[2] == 0 && reading[3] ==  0  && reading[4] == 0 && reading[5]   ==  0  && reading[6] == 0 && reading[7]  ==  0 ) {
-        if (positionRobot != 100) {
-          rotateLeft(120);
-        }
-      }
+    if ( positionRobot == 50) {
+      analogWrite(motorPin2, basicLeft);//left weel
+      analogWrite(motorPin4, basicRight);//right weel
+      intersectionRightTurning(38);
     }
+
   */
 
+
+  if ((reading[3] == 1 || reading[4] ==  1) && reading[5] ==  1  && reading[6] == 1  && reading[7] == 1 || isIntersection == true) {
+    stopRobot();
+    isIntersection = true;
+  }
+  if (isIntersection == true)
+  {
+    intersectionRightTurning(25);
+
+  }
+
+
+  if (reading[0] == 0 && reading[1]   ==  0 && reading[2] == 0 && reading[3] ==  0  && reading[4] == 0 && reading[5]   ==  0  && reading[6] == 0 && reading[7]  ==  0 && previousPosition != 50 && isIntersection == false) {
+    if (positionRobot != 100) {
+      if (isIntersection == false)
+      {
+        rotateLeft(25);
+      }
+    }
+  }
+
+
+  if ( isIntersection == false ) {
+    if (positionRobot >= -7 && positionRobot < 0 ) { //TURN LEFT
+      analogWrite(motorPin2, 100);//left weel
+      analogWrite(motorPin4, 104);//right weel
+      Serial.println("TURN LEFT");
+    }
+    if (positionRobot <= 7 && positionRobot > 0 ) {//TURN RIGHT
+
+      analogWrite(motorPin2, 140);
+      analogWrite(motorPin4, 100);
+      Serial.println("TURN RIGHT");
+    }
+
+  }
   /*
     //intersection Turn left
     if (reading[0] == 1 && reading[1] ==  1  && reading[2] == 1  && reading[3] == 1 || reading[4] ==  1 && reading[5] == 0 && reading[6] == 0  && reading[7] == 0) {
@@ -284,29 +309,20 @@ void moving(int positionRobot, int reading[]) {
   //turn right
 
 
-  if (positionRobot >= -7 && positionRobot < 0 ) { //TURN LEFT
-    analogWrite(motorPin2, 90);//left weel
-    analogWrite(motorPin4, 130);//right weel
-    Serial.println("TURN LEFT");
-  }
-  if (positionRobot <= 7 && positionRobot > 0 ) {//TURN RIGHT
-    analogWrite(motorPin2, 130);
-    analogWrite(motorPin4, 90);
-    Serial.println("TURN RIGHT");
-  }
+  /*
+    if (isIntersection == false) {
+      //if white go for 180 degree turn
+      if (positionRobot == -13 && previousPosition != 50  && positionRobot != 0 ) {
+        for (int i = 0; i < NUMPIXELS; i++) {
+          pixels.setPixelColor(i, pixels.Color(0, 0, 255));
+          pixels.show();
+        }
+        //make it make a u turn
+        rotateLeft(150);
 
-  if (isIntersection == false) {
-    //if white go for 180 degree turn
-    if (positionRobot == -13 && previousPosition != 50  && positionRobot != 0 ) {
-      for (int i = 0; i < NUMPIXELS; i++) {
-        pixels.setPixelColor(i, pixels.Color(0, 0, 255));
-        pixels.show();
       }
-      //make it make a u turn
-      rotateLeft(150);
-
     }
-  }
+  */
 }
 
 
@@ -363,7 +379,6 @@ void rotateIntersection(int cycle) {
     analogWrite(motorPin3, 200);
     delay(100);
     countL++;
-
   } else {
     analogWrite(motorPin2, 200);
     analogWrite(motorPin4, 200);
@@ -408,14 +423,15 @@ void rotateLeft(int cycle) {
       if (countL < cycle) {
         analogWrite(motorPin2, 0);
         analogWrite(motorPin4, 180);
-        analogWrite(motorPin, 170);
+        analogWrite(motorPin, 180);
         analogWrite(motorPin3, 0);
         delay(250);
         countL++;
 
       } else {
-        analogWrite(motorPin2, 0);
-        analogWrite(motorPin4, 0);
+        analogWrite(motorPin2, 255);
+        analogWrite(motorPin4, 255);
+        delay(50);
         analogWrite(motorPin, 0);
         analogWrite(motorPin3, 0);
         countL = 0;
@@ -452,7 +468,7 @@ void rotateRight (int cycle) {
 
 
 //was suppose to be left turning but do to the rest of the code this will be right turning now on intersections
-void intersectionLeftTurning (int cycle) {
+void intersectionRightTurning (int cycle) {
   stopRobot();
   if (countL < cycle) {
     analogWrite(motorPin4, 0);
@@ -461,6 +477,7 @@ void intersectionLeftTurning (int cycle) {
     analogWrite(motorPin3, 0);
     delay(150);
     countL++;
+    isIntersection = true;
 
   } else {
     analogWrite(motorPin2, 0);

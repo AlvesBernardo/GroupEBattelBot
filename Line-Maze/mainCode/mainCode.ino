@@ -6,9 +6,9 @@
 #include<SoftwareSerial.h>
 
 //defining pins for distance sensor
-const int trigPin = 12;
-const int echoPin = 13;
-const int servoPin = 4;
+const int trigPin = 12; //distance sensor
+const int echoPin = 13;//distance sensor
+const int servoPin = 4; //not used
 
 //defining motors
 const int motorPin = 11; //A1
@@ -17,15 +17,15 @@ const int motorPin3 = 6; //B1
 const int motorPin4 = 5; //B2
 
 //rotation sensors
-const int motorR1 = 3;
-const int motorR2 = 2;
+const int motorR1 = 3; //rotation sensor
+const int motorR2 = 2; //rotation sensor
 
 //gripper
-int gripperPin = 8;
+int gripperPin = 8; 
 
 //is intersectionDone
 boolean isIttIntersection = false;
-
+//var to count rotation
 volatile int countL = 0;
 volatile int countR = 0;
 
@@ -49,8 +49,8 @@ int currentPosition = 0;
 
 //speeds
 const int turningRatio = 35;
-const int basicRight = 280;
-const int basicLeft = 165;
+const int basicRight = 200;
+const int basicLeft = 160;
 const int minumumSpeed = 75;
 
 
@@ -59,7 +59,7 @@ long duration;
 int distance;
 int distanceToNextRobot;
 int neoPIN = 7; //NEO pixel datapin
-int NUMPIXELS = 4;
+int NUMPIXELS = 4; //amount of numpixels
 
 
 boolean test = false;
@@ -356,7 +356,6 @@ void detectDistance() {
 //posible start of Race needs to be checked out.
 
 
-//endOfRace
 
 
 //==================[ rotation sensors ]====================
@@ -429,9 +428,8 @@ void rotateLeft(int cycle) {
         countL++;
 
       } else {
-        analogWrite(motorPin2, 255);
-        analogWrite(motorPin4, 255);
-        delay(50);
+        analogWrite(motorPin2, 180);
+        analogWrite(motorPin4, 180);
         analogWrite(motorPin, 0);
         analogWrite(motorPin3, 0);
         countL = 0;
@@ -468,7 +466,7 @@ void rotateRight (int cycle) {
 
 
 //was suppose to be left turning but do to the rest of the code this will be right turning now on intersections
-void intersectionRightTurning (int cycle) {
+void  intersectionRightTurning (int cycle) {
   stopRobot();
   if (countL < cycle) {
     analogWrite(motorPin4, 0);
@@ -520,6 +518,9 @@ void endRace() {
   stopRobot();
 }
 
+
+void waitForRobot(){
+  }
 
 void openGripper() {
   for (int i = 0; i < 10; i++) {

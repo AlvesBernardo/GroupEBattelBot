@@ -3,7 +3,6 @@
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
-#include<SoftwareSerial.h>
 
 //defining pins for distance sensor
 const int trigPin = 12; //distance sensor
@@ -21,7 +20,7 @@ const int motorR1 = 3; //rotation sensor
 const int motorR2 = 2; //rotation sensor
 
 //gripper
-int gripperPin = 8; 
+int gripperPin = 8;
 
 //is intersectionDone
 boolean isIttIntersection = false;
@@ -49,10 +48,9 @@ int currentPosition = 0;
 
 //speeds
 const int turningRatio = 35;
-const int basicRight = 200;
+const int basicRight = 190;
 const int basicLeft = 160;
 const int minumumSpeed = 75;
-
 
 // defines variables
 long duration;
@@ -61,9 +59,7 @@ int distanceToNextRobot;
 int neoPIN = 7; //NEO pixel datapin
 int NUMPIXELS = 4; //amount of numpixels
 
-
-boolean test = false;
-
+boolean detectedRobot = false;
 
 Adafruit_NeoPixel pixels(NUMPIXELS, neoPIN, NEO_GRB + NEO_KHZ800);
 #define DELAYVAL 500
@@ -101,8 +97,6 @@ void setup() {
   pinMode(lineSenor7, INPUT);
   pinMode(lineSenor8, INPUT);
 
-
-
   //==================[ Leds and distance ]====================
   pinMode(trigPin, OUTPUT);  // Sets the trigPin as an Output
   pinMode(echoPin, INPUT);  // Sets the echoPin as an Input
@@ -111,40 +105,12 @@ void setup() {
   pixels.setBrightness(50);
   pixels.show(); // Initialize all pixels to 'off'
 
-
   //==================[ gripper ]====================
   openGripper();
-
-
 }
 
-
 void loop() {
-  //==================[ Start of race ]====================
-  if (hasRacesStarted == false) {
-    startRace();
-  } else {
-
-    //==================[ loop to convert values to 0 and 1 and converting lines ]====================
-    detectDistance();
-    for (int i = 0; i < 8; i++) {
-      if (analogRead(pinBlnWh[i]) > 750) {
-        reading[i] = 1;
-      }
-      else if (analogRead(pinBlnWh[i]) < 750) {
-        reading[i] = 0;
-      }
-      // showLineSensorReading();
-    }//the sensors reading are stored in previously empty array
-    int positionRobot = conversion(reading);//conversts reading to position
-    //
-
-
-
-
-
-
-    //distance
+   //distance
     // Clears the trigPin
     digitalWrite(trigPin, LOW);
     //delayMicroseconds(2);
@@ -159,16 +125,29 @@ void loop() {
     // Prints the distance on the Serial Monitor
     //Serial.print("Distance: ");
     //Serial.println(distance);
+  //==================[ Start of race ]====================
+  if (hasRacesStarted == false) {
+    startRace();
+  } else {
+    //==================[ loop to convert values to 0 and 1 and converting lines ]====================
+    detectDistance();
+    for (int i = 0; i < 8; i++) {
+      if (analogRead(pinBlnWh[i]) > 750) {
+        reading[i] = 1;
+      }
+      else if (analogRead(pinBlnWh[i]) < 750) {
+        reading[i] = 0;
+      }
+      // showLineSensorReading();
+    }//the sensors reading are stored in previously empty array
+    int positionRobot = conversion(reading);//conversts reading to position
+    //
+   
     previousPosition = positionRobot;
     moving(positionRobot, reading); //move
-
   }
 
 }
-
-
-
-
 /*    =======================*/
 /*    ======[funtions] ========*/
 /*    =======================*/
@@ -176,7 +155,6 @@ void loop() {
 //==================[ show line readings ]====================
 
 void showLineSensorReading() {
-
   Serial.print(reading[0]);
   Serial.print(",");
   Serial.print(reading[1]);
@@ -192,17 +170,15 @@ void showLineSensorReading() {
   Serial.print(reading[6]);
   Serial.print(",");
   Serial.print(reading[7]);
-
+  Serial.println("-");
+  Serial.print(positionRobot);
   Serial.println("-");
   delay(100);
 
 }
 
-
 //==================[ depening on certain positions we want the robot to have a certain value ]====================
 int conversion(int reading[]) { //first of all it checks for outliers such as 10000000 and 00000001;
-
-
   int positionRobot = 0;
   if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
     positionRobot = -13;
@@ -211,7 +187,6 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
   if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 1 && reading[4] == 1 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
     positionRobot = 100;
     return positionRobot;
-
   }
   if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 0 && reading[4] == 0 && reading[5] == 0 && reading[6] == 0 && reading[7] == 1) {
     positionRobot = 13;
@@ -220,19 +195,15 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
   if (reading[0] == 1 && reading[1] == 1 && reading[2] == 1 && reading[3] == 1 && reading[4] == 1 && reading[5] == 0 && reading[6] == 0 && reading[7] == 0) {
     positionRobot = 20;
     return positionRobot;
-
-
   }
   if (reading[0] == 0 && reading[1] == 0 && reading[2] == 0 && reading[3] == 1 && reading[4] == 1 && reading[5] == 1 && reading[6] == 1 && reading[7] == 1) {
     positionRobot = 30;
     return positionRobot;
   }
-
   if (reading[0] == 1 && reading[1] == 1 && reading[2] == 1 && reading[3] == 1 && reading[4] == 1 && reading[5] == 1 && reading[6] == 1 && reading[7] == 1) {
     positionRobot = 50;
     return positionRobot;
     isIntersection = true;
-
   }
   //if it isnt an outlier it goes here
   for (int i = 0; i < 7; i++) {
@@ -243,94 +214,50 @@ int conversion(int reading[]) { //first of all it checks for outliers such as 10
   return positionRobot;//returns position
 }
 
-
 //==================[ reading the position then making a certain movemen ]====================
-
 void moving(int positionRobot, int reading[]) {
-  //showLineSensorReading();
 
   if (reading[3] == 1 && reading[4]   ==  1) {
     forward();
-
   }
-  /*
-    if ( positionRobot == 50) {
-      analogWrite(motorPin2, basicLeft);//left weel
-      analogWrite(motorPin4, basicRight);//right weel
-      intersectionRightTurning(38);
-    }
-
-  */
-
 
   if ((reading[3] == 1 || reading[4] ==  1) && reading[5] ==  1  && reading[6] == 1  && reading[7] == 1 || isIntersection == true) {
     stopRobot();
     isIntersection = true;
+    Serial.println("da");
   }
+
   if (isIntersection == true)
   {
-    intersectionRightTurning(25);
-
+    intersectionRightTurning(23);
+    Serial.println("sim");
   }
 
-
-  if (reading[0] == 0 && reading[1]   ==  0 && reading[2] == 0 && reading[3] ==  0  && reading[4] == 0 && reading[5]   ==  0  && reading[6] == 0 && reading[7]  ==  0 && previousPosition != 50 && isIntersection == false) {
+  if (reading[0] == 0 && reading[1]   ==  0 && reading[2] == 0 && reading[3] ==  0  && reading[4] == 0 && reading[5]   ==  0  && reading[6] == 0 && reading[7]  ==  0 && isIntersection == false) {
     if (positionRobot != 100) {
-      if (isIntersection == false)
+      if (isIntersection == false || reading[3] !=  1  || reading[4] != 1 )
       {
-        rotateLeft(25);
+        rotateLeft(5);
+      } else {
+        forward();
       }
     }
   }
 
-
   if ( isIntersection == false ) {
     if (positionRobot >= -7 && positionRobot < 0 ) { //TURN LEFT
       analogWrite(motorPin2, 100);//left weel
-      analogWrite(motorPin4, 104);//right weel
+      analogWrite(motorPin4, 140);//right weel
       Serial.println("TURN LEFT");
     }
     if (positionRobot <= 7 && positionRobot > 0 ) {//TURN RIGHT
-
       analogWrite(motorPin2, 140);
       analogWrite(motorPin4, 100);
       Serial.println("TURN RIGHT");
     }
 
   }
-  /*
-    //intersection Turn left
-    if (reading[0] == 1 && reading[1] ==  1  && reading[2] == 1  && reading[3] == 1 || reading[4] ==  1 && reading[5] == 0 && reading[6] == 0  && reading[7] == 0) {
-    rotateLeftTurn(55);
-    Serial.println("ohh i need to turn left");
-    }
-
-  */
-  //turn right
-
-
-  /*
-    if (isIntersection == false) {
-      //if white go for 180 degree turn
-      if (positionRobot == -13 && previousPosition != 50  && positionRobot != 0 ) {
-        for (int i = 0; i < NUMPIXELS; i++) {
-          pixels.setPixelColor(i, pixels.Color(0, 0, 255));
-          pixels.show();
-        }
-        //make it make a u turn
-        rotateLeft(150);
-
-      }
-    }
-  */
 }
-
-
-
-
-
-
-
 
 //distance
 void detectDistance() {
@@ -343,7 +270,6 @@ void detectDistance() {
     }
   } else {
     //distance less then 10 neopixel on
-
     pixels.setPixelColor(3, pixels.Color(140, 255, 0 ));
     pixels.setPixelColor(0, pixels.Color(140, 255, 0 ));
     pixels.setPixelColor(1, pixels.Color(137, 207, 240));
@@ -352,11 +278,13 @@ void detectDistance() {
   }
 }
 
-
-//posible start of Race needs to be checked out.
-
-
-
+boolean detectRobot() {
+  if (distance < 27 ) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 //==================[ rotation sensors ]====================
 // funtion to make it turn 180 degrees
@@ -368,102 +296,26 @@ void rotationR() {
   countR++;
 }
 
-void rotateIntersection(int cycle) {
-  if (countL < cycle) {
-    analogWrite(motorPin2, HIGH);
-    analogWrite(motorPin3, HIGH);
-    analogWrite(motorPin2, 200);
-    analogWrite(motorPin4, 0);
-    analogWrite(motorPin, 0);
-    analogWrite(motorPin3, 200);
-    delay(100);
-    countL++;
-  } else {
-    analogWrite(motorPin2, 200);
-    analogWrite(motorPin4, 200);
-    analogWrite(motorPin, 0);
-    analogWrite(motorPin3, 0);
-    countL = 0;
-    delay(800);
-    isIttIntersection = false;
-
-
-  }
-}
-
-void rotateLeftTurn(int cycle) {
-  if (countL < cycle) {
-    analogWrite(motorPin, HIGH);
-    analogWrite(motorPin4, HIGH);
-    analogWrite(motorPin4, 180);
-    analogWrite(motorPin, 180);
-    analogWrite(motorPin3, 0);
-    analogWrite(motorPin2, 0);
-    delay(100);
-    countL++;
-
-  } else {
-
-    analogWrite(motorPin2, 0);
-    analogWrite(motorPin4, 0);
-    analogWrite(motorPin, 0);
-    analogWrite(motorPin3, 0);
-    countL = 0;
-    delay(300);
-
-
-  }
-
-}
-
 void rotateLeft(int cycle) {
   if (positionRobot != 50) {
     if (positionRobot != 100) {
       if (countL < cycle) {
         analogWrite(motorPin2, 0);
-        analogWrite(motorPin4, 180);
-        analogWrite(motorPin, 180);
+        analogWrite(motorPin4, 170);
+        analogWrite(motorPin, 190);
         analogWrite(motorPin3, 0);
-        delay(250);
+        delay(150);
         countL++;
-
       } else {
-        analogWrite(motorPin2, 180);
-        analogWrite(motorPin4, 180);
+        analogWrite(motorPin2, 0);
+        analogWrite(motorPin4, 0);
         analogWrite(motorPin, 0);
         analogWrite(motorPin3, 0);
         countL = 0;
-        delay(800);
-
-
       }
     }
   }
 }
-
-void rotateRight (int cycle) {
-  if (countL < cycle) {
-    analogWrite(motorPin2, HIGH);
-    analogWrite(motorPin3, HIGH);
-    analogWrite(motorPin2, 180);
-    analogWrite(motorPin4, 0);
-    analogWrite(motorPin, 0);
-    analogWrite(motorPin3, 180);
-    delay(100);
-    countL++;
-  } else {
-    analogWrite(motorPin2, 0);
-    analogWrite(motorPin4, 0);
-    analogWrite(motorPin, 0);
-    analogWrite(motorPin3, 0);
-    countL = 0;
-    delay(800);
-    isTurningRight = false;
-
-
-  }
-}
-
 
 //was suppose to be left turning but do to the rest of the code this will be right turning now on intersections
 void  intersectionRightTurning (int cycle) {
@@ -471,8 +323,8 @@ void  intersectionRightTurning (int cycle) {
   if (countL < cycle) {
     analogWrite(motorPin4, 0);
     analogWrite(motorPin, 0);
-    analogWrite(motorPin2, 180);
-    analogWrite(motorPin3, 0);
+    analogWrite(motorPin2, 190);
+    analogWrite(motorPin3, 160);
     delay(150);
     countL++;
     isIntersection = true;
@@ -484,30 +336,27 @@ void  intersectionRightTurning (int cycle) {
     analogWrite(motorPin3, 0);
     countL = 0;
     isIntersection = false;
-
-
   }
 }
 
-
-
-
 //==================[ start and ending of the race ]====================
 void startRace() {
-
-  analogWrite(motorPin2, basicLeft);
-  analogWrite(motorPin4, basicRight);
-  delay(1400);
-  stopRobot();
-  analogWrite(motorPin2, 0);
-  delay(150);
-  closeGripper();
-  analogWrite(motorPin4, basicRight);//left turn start could be calibrated more precise.
-  analogWrite(motorPin4, basicRight);
-  analogWrite(motorPin2, 0);
-  delay(800);
-  stopRobot();
-  hasRacesStarted = true;
+  if (distance < 27) {
+    delay(200);
+    analogWrite(motorPin2, basicLeft);
+    analogWrite(motorPin4, basicRight);
+    delay(1400);
+    stopRobot();
+    analogWrite(motorPin2, 0);
+    delay(150);
+    closeGripper();
+    analogWrite(motorPin4, basicRight);//left turn start could be calibrated more precise.
+    analogWrite(motorPin4, basicRight);
+    analogWrite(motorPin2, 0);
+    delay(800);
+    stopRobot();
+    hasRacesStarted = true;
+  }
 }
 //funtion for the ending of the race
 void endRace() {
@@ -518,10 +367,7 @@ void endRace() {
   stopRobot();
 }
 
-
-void waitForRobot(){
-  }
-
+//this function will wait for to prev robot to finish and drop the pin so he can start
 void openGripper() {
   for (int i = 0; i < 10; i++) {
     digitalWrite(gripperPin, HIGH);
@@ -540,57 +386,17 @@ void closeGripper() {
   }
 }
 
-/*
-  void detectRobotCatchPin(){
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(5);
-  //max 200cm. if returns more, it detected nothing.
-  digitalWrite(trigPin, LOW);
-
-
-  duration = pulseIn(echo, HIGH);
-  distance = duration*0.0344/2;
-  if(distance<35){
-    return true;
-  }
-  return false;
-
-
-  }
-*/
-
-
 //==================[ 4 movement funtions could be usefull ]====================
 void forward() {
-  analogWrite(motorPin, 255);
-  analogWrite(motorPin4, 255);
+
   analogWrite(motorPin2, basicLeft);
   analogWrite(motorPin, 0);
   analogWrite(motorPin3, 0);
   analogWrite(motorPin4, basicRight);
 }
-
-void turnRight() {
-  analogWrite(motorPin2, 180);  //Right Motor forword Pin
-  analogWrite(motorPin, 0); //Right Motor backword Pin
-  analogWrite(motorPin3, 0);  //Left Motor backword Pin
-  analogWrite(motorPin4, 150); //Left Motor forword Pin
-}
-
-void turnLeft() {
-  analogWrite(motorPin2, 150); //Right Motor forword Pin
-  analogWrite(motorPin, 0);  //Right Motor backword Pin
-  analogWrite(motorPin3, 0 ); //Left Motor backword Pin
-  analogWrite(motorPin4, 180);  //Left Motor forword Pin
-}
-
 void stopRobot() {
   analogWrite(motorPin2, 0); //Right Motor forword Pin
   analogWrite(motorPin, 0); //Right Motor backword Pin
   analogWrite(motorPin3, 0); //Left Motor backword Pin
   analogWrite(motorPin4, 0); //Left Motor forward Pin
-
-
 }

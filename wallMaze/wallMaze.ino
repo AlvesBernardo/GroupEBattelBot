@@ -41,12 +41,11 @@ const uint32_t aqua = pixels.Color(200, 0, 50);
 
 const char DirectionLeft = 'L';
 const char DirectionRight = 'R';
-const char DirectionUndefined = 'U';
 
 const int DarknessThreshold = 750;     // determines the threshold value for the robot to consider a reading from the line sensor as "dark" 
-const double SafeDistanceFront = 18;   // the robot will not go closer than this distance to an obstacle
+const double SafeDistanceFront = 16;   // the robot will not go closer than this distance to an obstacle
 const double SafeDistanceSide = 6;  // The robot will try to keep this distance to the wall
-const double SafeDistanceMargin = 0.25; // The robot will adjust its course if it exceeds SafeDistanceSide +/- SafeDistanceMargin range
+const double SafeDistanceMargin = 0.5; // The robot will adjust its course if it exceeds SafeDistanceSide +/- SafeDistanceMargin range
 
 const int GripperPulseOpen = 1700;  // sending this value to the gripper via writeToGripper() forces it open
 const int GripperPulseClose = 1050; // completely opposite effect: forces the gripper shut
@@ -63,6 +62,7 @@ long g_tick = 0; // the basic unit of time of the program. Measures the total am
 volatile unsigned long g_lastLeftRotationUpdate = millis(); // used to check if the robot's left wheel is stuck
 volatile unsigned long g_lastRightRotationUpdate = millis(); // used to check if the robot's right wheel is stuck
 unsigned long g_lastWallTurn = millis(); // used to prevent the robot from being too eager to turn
+unsigned long g_lastRetreat = millis();
 
 bool g_isSwitchedOff = false; // forces an early exit from the loop() (unless a safeguard is activated) after it is set to true. Effectively terminates the program.
 char g_followWall = DirectionRight; // must be 'U', 'L' or 'R'; determines which wall the robot will stay close to and, therefore which turns will it make
@@ -72,8 +72,6 @@ bool g_isRightMotorFwd = false;
 
 volatile unsigned long g_rightWheelCounter = 0; // counts the rotation sensor values for the right wheel. Used by interrupts and "smart" motor functions
 volatile unsigned long g_leftWheelCounter = 0;  // ditto, but left wheel
-
-int g_collisions = 0; // total number of collisions
 
 /*
  * Reading from sensors is quite time-consuming, so it would be a better use of resources to store the values inside a variable and update it at regular intervals
@@ -124,8 +122,9 @@ void updateLeftWheelCounter() {
 }
 void resetWheelCounters(int leftWheel=0, int rightWheel=0) {
     noInterrupts();
-    g_lastLeftRotationUpdate = millis();
-    g_lastRightRotationUpdate = millis();
+    unsigned long curTime = millis();
+    g_lastLeftRotationUpdate = curTime;
+    g_lastRightRotationUpdate = curTime;
     g_leftWheelCounter = leftWheel;
     g_rightWheelCounter = rightWheel;
     interrupts();
@@ -247,15 +246,6 @@ double getRightDistance() {
 
 
 // Line Sensor Functions
-void logLineSensorReadings() {
-    Serial.print("Line Sensor (L->R): ");
-    for (int sensorPin : LineSensorArray) {
-        Serial.print(analogRead(sensorPin));
-        Serial.print(", ");
-    }
-    Serial.println("");
-}
-
 int getDarkCount() {
     int counter = 0;
     for (int sensorPin : LineSensorArray) {
@@ -334,16 +324,11 @@ void tick() {
 }
 
 bool hasToRetreat(int timeOut = TimeOut) {
-    return (isLeftWheelStuck(timeOut) || isRightWheelStuck(timeOut) || (g_prevFrontDistance == g_curFrontDistance));
+    return (isLeftWheelStuck(timeOut) || isRightWheelStuck(timeOut));
 }
 void retreat(int retreatDuration=1000) {
-    if (g_collisions % 5 == 0) {
-        closeGripper();
-    }
-    g_collisions++;
     clearPixels();
     rearPixels(red);
-    //moveBackward();
     if (g_followWall == DirectionLeft) {
         moveBackwardLeft();
     } else {
@@ -351,8 +336,10 @@ void retreat(int retreatDuration=1000) {
     }
     delay(retreatDuration);
     stopMotors();
+    closeGripper();
     resetWheelCounters();
     clearPixels();
+    g_lastRetreat = millis();
 }
 
 int degreesToTicks(int angle) {
@@ -369,10 +356,8 @@ void moveDistance(int distance, uint32_t color = green) {
     int targetTicks = g_rightWheelCounter + (distance / CmPerPulse);
     while (g_rightWheelCounter < targetTicks) {
         if (hasToRetreat()) {
-            int remainingTicks = targetTicks - g_rightWheelCounter;
             retreat();
-            resetWheelCounters();
-            return moveDistance(remainingTicks / CmPerPulse, color);
+            return;
         }
         moveForward();
     }
@@ -393,7 +378,8 @@ void turnByAngle(int angle, char turnDirection, uint32_t color = orange) {
             rotatingWheelCounter = &g_rightWheelCounter;
             stoppedWheelCounter = &g_leftWheelCounter;
             checkDistanceFunction = getLeftDistance;
-            differenceInTicks += *rotatingWheelCounter - *stoppedWheelCounter; // this line of code may be duplicated in the next case, but we do not want to 
+            // this line of code may be duplicated in the next case, but we do not want to waste any time once the motors start turning
+            differenceInTicks += *rotatingWheelCounter - *stoppedWheelCounter; 
             turnLeft();
             break;
         case DirectionRight:
@@ -424,8 +410,8 @@ void turnByAngle(int angle, char turnDirection, uint32_t color = orange) {
     clearPixels();
 }
 
-void trackWall(char wallPosition) {
-    frontPixels(green);
+void trackWall(char wallPosition, uint32_t color = green) {
+    frontPixels(color);
     double *distance;
     void (*adjustTowardsFn)(); // f-n -> function; f-n does not mean fun
     void (*adjustAwayFn)();  
@@ -459,6 +445,20 @@ void awaitActivation() {
         g_curFrontDistance = getFrontDistance();
     } while (g_curFrontDistance > 25);
 }
+void start() {
+    fillPixels(blue);
+    openGripper();
+    delay(500);
+    awaitActivation();
+    fillPixels(white);
+    delay(3000);
+    resetWheelCounters();
+    moveDistance(25);
+    followLine();
+    closeGripper();
+    turnByAngle(90, DirectionLeft);
+    tick();
+}
 
 void setup() {
     Serial.begin(9600);
@@ -483,19 +483,8 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(RightWheelSensorPin), updateRightWheelCounter, CHANGE);
     attachInterrupt(digitalPinToInterrupt(LeftWheelSensorPin), updateLeftWheelCounter, CHANGE);
     pixels.begin();
-    fillPixels(blue);
-    openGripper();
-    delay(500);
-    awaitActivation();
-    fillPixels(white);
-    delay(3000);
-    resetWheelCounters();
-    moveDistance(25);
-    followLine();
-    closeGripper();
-    turnByAngle(90, DirectionLeft);
-    tick();
     g_followWall = DirectionLeft;
+    start();
 }
 
 void loop() {
@@ -520,12 +509,20 @@ void loop() {
       return;
     }
     // sees a line: follow it
-    if (calcLinePosition()) {
+    if (calcLinePosition() && g_lastRetreat + TimeOut < millis()) {
         followLine();
         return;
     }
-    if (hasToRetreat()) {
-        retreat(700);
+    if (g_followWall == DirectionRight && g_curRightDistance > 35) {
+        rightPixels(blue);
+        moveDistance(10);
+        turnByAngle(90, DirectionRight, blue);
+        return;
+    }
+    if (g_followWall == DirectionLeft && g_curLeftDistance > 35) {
+        leftPixels(blue);
+        moveDistance(10);
+        turnByAngle(90, DirectionLeft, blue);
         return;
     }
     if (g_curFrontDistance <= SafeDistanceFront) {
@@ -535,17 +532,11 @@ void loop() {
         else { 
             turnByAngle(90, DirectionLeft);
         }
-        retreat(400);
+        retreat(300);
         return;
     }
-    if (g_followWall == DirectionRight && g_curRightDistance > 35) {
-        moveDistance(10);
-        turnByAngle(90, DirectionRight, blue);
-        return;
-    }
-    if (g_followWall == DirectionLeft && g_curLeftDistance > 35) {
-        moveDistance(10);
-        turnByAngle(90, DirectionLeft, blue);
+    if (hasToRetreat()) {
+        retreat(700);
         return;
     }
     trackWall(g_followWall);
